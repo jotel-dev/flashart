@@ -15,7 +15,7 @@ const STYLES = [
 ];
 
 const PRICE_CUSD = '0.05';
-const TREASURY_ADDRESS = '0x765DE816845861e75A25fCA122bb6898B8B1282a' as `0x${string}`;
+const TREASURY_ADDRESS = '0xd83ace127352e6d76b7045c762cf0ef00a0168fa' as `0x${string}`;
 // cUSD contract on Celo Mainnet
 const CUSD_CONTRACT = '0x765DE816845861e75A25fCA122bb6898B8B1282a' as `0x${string}`;
 
@@ -185,8 +185,8 @@ export default function Home() {
                     key={style.id}
                     onClick={() => setSelectedStyle(style)}
                     className={`px-3 py-2.5 rounded-xl text-sm font-medium border transition-all text-left ${selectedStyle.id === style.id
-                      ? 'bg-[#ff6b2b]/20 border-[#ff6b2b] text-white'
-                      : 'bg-white/5 border-white/10 text-white/50 hover:border-white/30'
+                        ? 'bg-[#ff6b2b]/20 border-[#ff6b2b] text-white'
+                        : 'bg-white/5 border-white/10 text-white/50 hover:border-white/30'
                       }`}
                   >
                     {style.label}
