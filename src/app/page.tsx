@@ -151,8 +151,13 @@ export default function Home() {
           )}
 
           {!isMiniPay && (
-            <div className="mt-4 flex justify-center">
-              <ConnectButton />
+            <div className="mt-4 space-y-3">
+              <div className="flex justify-center">
+                <ConnectButton />
+              </div>
+              <p className="text-white/30 text-xs text-center">
+                📱 On mobile? Open in <a href="https://minipay.opera.com" className="text-[#ff6b2b]">MiniPay</a> for best experience
+              </p>
             </div>
           )}
         </div>
