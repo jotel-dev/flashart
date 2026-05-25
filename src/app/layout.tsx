@@ -1,7 +1,6 @@
-import type { Metadata } from 'next';
+ import type { Metadata } from 'next';
 import { Space_Grotesk } from 'next/font/google';
 import './globals.css';
-import WalletProvider from '@/components/WalletProvider';
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ['latin'],
@@ -23,18 +22,10 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={spaceGrotesk.className}>
-        <WalletProvider>
-          {children}
-        </WalletProvider>
-      </body>
+      <body className={spaceGrotesk.className}>{children}</body>
     </html>
   );
 }
