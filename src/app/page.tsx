@@ -1,4 +1,4 @@
-'use client';
+ 'use client';
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
@@ -9,14 +9,13 @@ const STYLES = [
   { id: 'photorealistic', label: '📸 Photorealistic', suffix: 'photorealistic, 8k, ultra detailed' },
   { id: 'anime', label: '🎌 Anime', suffix: 'anime style, vibrant, studio ghibli inspired' },
   { id: 'oil-painting', label: '🖼️ Oil Painting', suffix: 'oil painting, classical art, museum quality' },
-  { id: 'logo', label: '✏️ Logo / Flat', suffix: 'flat design, logo style, vector art, clean' },
+  { id: 'logo', label: '✏️ Logo / Flat', suffix: 'minimalist logo design, flat vector illustration, simple bold shapes, solid color background, professional brand identity, no gradients, clean lines' },
   { id: 'cinematic', label: '🎬 Cinematic', suffix: 'cinematic, dramatic lighting, movie still' },
-  { id: 'afrofuturism', label: '🌍 Afrofuturism', suffix: 'afrofuturism, vibrant african patterns, futuristic, bold colors' },
+  { id: 'afrofuturism', label: '🌍 Afrofuturism', suffix: 'afrofuturism art, rich african culture, futuristic technology, vibrant colors, cosmic background, powerful black figures, detailed illustration' },
 ];
 
 const PRICE_CUSD = '0.05';
 const TREASURY_ADDRESS = '0xd83ace127352e6d76b7045c762cf0ef00a0168fa' as `0x${string}`;
-// cUSD contract on Celo Mainnet
 const CUSD_CONTRACT = '0x765DE816845861e75A25fCA122bb6898B8B1282a' as `0x${string}`;
 
 const CUSD_ABI = [
@@ -114,6 +113,16 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDownload = () => {
+    if (!imageUrl) return;
+    const link = document.createElement('a');
+    link.href = imageUrl;
+    link.download = 'flashart.png';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleReset = () => {
@@ -295,15 +304,12 @@ export default function Home() {
             )}
 
             <div className="flex gap-3">
-              <a
-                href={imageUrl}
-                download="flashart.png"
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                onClick={handleDownload}
                 className="flex-1 bg-white/10 hover:bg-white/20 text-white font-semibold py-3 rounded-2xl text-center transition-all text-sm"
               >
                 ⬇ Download
-              </a>
+              </button>
               <button
                 onClick={handleReset}
                 className="flex-1 bg-[#ff6b2b] hover:bg-[#ff8c50] text-white font-semibold py-3 rounded-2xl transition-all text-sm"
