@@ -1,15 +1,16 @@
- 'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { createWalletClient, custom, parseEther, createPublicClient, http } from 'viem';
 import { celo } from 'viem/chains';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 const STYLES = [
   { id: 'photorealistic', label: '📸 Photorealistic', suffix: 'photorealistic, 8k, ultra detailed' },
   { id: 'anime', label: '🎌 Anime', suffix: 'anime style, vibrant, studio ghibli inspired' },
   { id: 'oil-painting', label: '🖼️ Oil Painting', suffix: 'oil painting, classical art, museum quality' },
-{ id: 'logo', label: '🎨 Illustration', suffix: 'digital illustration, vibrant colors, detailed artwork, professional design, sharp edges, concept art' },
+  { id: 'logo', label: '🎨 Illustration', suffix: 'digital illustration, vibrant colors, detailed artwork, professional design, sharp edges, concept art' },
   { id: 'cinematic', label: '🎬 Cinematic', suffix: 'cinematic, dramatic lighting, movie still' },
   { id: 'afrofuturism', label: '🌍 Afrofuturism', suffix: 'afrofuturism art, rich african culture, futuristic technology, vibrant colors, cosmic background, powerful black figures, detailed illustration' },
 ];
@@ -115,16 +116,6 @@ export default function Home() {
     }
   };
 
-  const handleDownload = () => {
-    if (!imageUrl) return;
-    const link = document.createElement('a');
-    link.href = imageUrl;
-    link.download = 'flashart.png';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
   const handleReset = () => {
     setPrompt('');
     setImageUrl(null);
@@ -159,13 +150,10 @@ export default function Home() {
             </div>
           )}
 
-          {!isMiniPay && !walletAddress && (
-            <button
-              onClick={connectWallet}
-              className="mt-4 inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-1.5 text-xs text-white/50 hover:border-white/30 transition-colors"
-            >
-              Connect Wallet
-            </button>
+          {!isMiniPay && (
+            <div className="mt-4 flex justify-center">
+              <ConnectButton />
+            </div>
           )}
         </div>
 
@@ -194,8 +182,8 @@ export default function Home() {
                     key={style.id}
                     onClick={() => setSelectedStyle(style)}
                     className={`px-3 py-2.5 rounded-xl text-sm font-medium border transition-all text-left ${selectedStyle.id === style.id
-                        ? 'bg-[#ff6b2b]/20 border-[#ff6b2b] text-white'
-                        : 'bg-white/5 border-white/10 text-white/50 hover:border-white/30'
+                      ? 'bg-[#ff6b2b]/20 border-[#ff6b2b] text-white'
+                      : 'bg-white/5 border-white/10 text-white/50 hover:border-white/30'
                       }`}
                   >
                     {style.label}
