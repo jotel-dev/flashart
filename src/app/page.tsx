@@ -42,21 +42,63 @@ export default function Home() {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [isMiniPay, setIsMiniPay] = useState(false);
   const [txHash, setTxHash] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && (window.ethereum as any)?.isMiniPay) {
-      setIsMiniPay(true);
-      connectWallet();
+    setMounted(true);
+    const initWallet = async () => {
+      if (typeof window === 'undefined') return;
+
+      const ethereum = (window as any).ethereum;
+      if (!ethereum) return;
+
+      if (ethereum.isMiniPay) {
+        setIsMiniPay(true);
+        await connectWallet();
+      } else {
+        try {
+          const accounts = await ethereum.request({ method: 'eth_accounts' });
+          if (accounts?.[0]) setWalletAddress(accounts[0]);
+        } catch (err) {
+          console.error('Error checking authorized accounts:', err);
+        }
+      }
+    };
+
+    initWallet();
+
+    if (typeof window !== 'undefined' && (window as any).ethereum) {
+      const handleAccountsChanged = (accounts: string[]) => {
+        if (accounts.length > 0) {
+          setWalletAddress(accounts[0]);
+        } else {
+          setWalletAddress(null);
+        }
+      };
+
+      const ethereum = (window as any).ethereum;
+      ethereum.on?.('accountsChanged', handleAccountsChanged);
+      return () => {
+        ethereum.removeListener?.('accountsChanged', handleAccountsChanged);
+      };
     }
   }, []);
 
   const connectWallet = async () => {
+    setError(null);
     try {
-      if (!window.ethereum) return;
-      const accounts = await (window.ethereum as any).request({ method: 'eth_requestAccounts' });
+      if (typeof window === 'undefined' || !(window as any).ethereum) return;
+      const accounts = await (window as any).ethereum.request({ method: 'eth_requestAccounts' });
       if (accounts?.[0]) setWalletAddress(accounts[0]);
-    } catch (err) {
-      console.error('Wallet connect error:', err);
+    } catch (err: any) {
+      console.warn('Wallet connect error:', err);
+      if (err?.code === 4001) {
+        setError('Connection rejected. Please approve the request in MetaMask.');
+      } else if (err?.code === -32002) {
+        setError('Request already pending. Please open MetaMask to approve.');
+      } else {
+        setError(err?.message || 'Failed to connect wallet');
+      }
     }
   };
 
@@ -150,11 +192,27 @@ export default function Home() {
             </div>
           )}
 
-          {!isMiniPay && (
+          {!isMiniPay && !walletAddress && (
             <div className="mt-4 space-y-3">
               <div className="flex justify-center">
-                <ConnectButton />
+                {!mounted ? (
+                  <div className="h-10 w-[160px] bg-white/5 animate-pulse rounded-xl" />
+                ) : typeof window !== 'undefined' && (window as any).ethereum ? (
+                  <button
+                    onClick={connectWallet}
+                    className="bg-[#ff6b2b] hover:bg-[#ff8c50] text-white font-bold py-2.5 px-6 rounded-xl transition-all text-sm flex items-center gap-2 shadow-lg shadow-[#ff6b2b]/20 cursor-pointer"
+                  >
+                    Connect Wallet
+                  </button>
+                ) : (
+                  <ConnectButton />
+                )}
               </div>
+              {error && (
+                <p className="text-red-400/80 text-xs text-center max-w-xs mx-auto bg-red-400/5 border border-red-400/10 rounded-lg py-1.5 px-3">
+                  ⚠️ {error}
+                </p>
+              )}
               <p className="text-white/30 text-xs text-center">
                 📱 On mobile? Open in <a href="https://minipay.opera.com" className="text-[#ff6b2b]">MiniPay</a> for best experience
               </p>
