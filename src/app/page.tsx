@@ -15,7 +15,7 @@ const STYLES = [
 ];
 
 const PRICE_CUSD = '0.05';
-const TREASURY_ADDRESS = '0xd83ace127352e6d76b7045c762cf0ef00a0168fa' as `0x${string}`;
+const TREASURY_ADDRESS = '0xfD40e6D6cd174AeE645D65dfC9F4A3061d2a78a7' as `0x${string}`;
 const CUSD_CONTRACT = '0x765DE816845861e75A25fCA122bb6898B8B1282a' as `0x${string}`;
 
 const CUSD_ABI = [
