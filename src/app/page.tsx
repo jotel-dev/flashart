@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { createWalletClient, custom, parseEther, createPublicClient, http } from 'viem';
 import { celo } from 'viem/chains';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { useAccount, useWalletClient } from 'wagmi';
 
 const STYLES = [
   { id: 'photorealistic', label: '📸 Photorealistic', suffix: 'photorealistic, 8k, ultra detailed' },
@@ -44,61 +45,32 @@ export default function Home() {
   const [txHash, setTxHash] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
 
+  // RainbowKit wallet
+  const { address: rainbowAddress, isConnected } = useAccount();
+  const { data: walletClientData } = useWalletClient();
+
   useEffect(() => {
     setMounted(true);
-    const initWallet = async () => {
-      if (typeof window === 'undefined') return;
-
-      const ethereum = (window as any).ethereum;
-      if (!ethereum) return;
-
-      if (ethereum.isMiniPay) {
-        setIsMiniPay(true);
-        await connectWallet();
-      } else {
-        try {
-          const accounts = await ethereum.request({ method: 'eth_accounts' });
-          if (accounts?.[0]) setWalletAddress(accounts[0]);
-        } catch (err) {
-          console.error('Error checking authorized accounts:', err);
-        }
-      }
-    };
-
-    initWallet();
-
-    if (typeof window !== 'undefined' && (window as any).ethereum) {
-      const handleAccountsChanged = (accounts: string[]) => {
-        if (accounts.length > 0) {
-          setWalletAddress(accounts[0]);
-        } else {
-          setWalletAddress(null);
-        }
-      };
-
-      const ethereum = (window as any).ethereum;
-      ethereum.on?.('accountsChanged', handleAccountsChanged);
-      return () => {
-        ethereum.removeListener?.('accountsChanged', handleAccountsChanged);
-      };
+    const ethereum = (window as any).ethereum;
+    if (ethereum?.isMiniPay) {
+      setIsMiniPay(true);
+      connectMiniPay();
     }
   }, []);
 
-  const connectWallet = async () => {
-    setError(null);
+  // Sync RainbowKit address
+  useEffect(() => {
+    if (isConnected && rainbowAddress && !isMiniPay) {
+      setWalletAddress(rainbowAddress);
+    }
+  }, [isConnected, rainbowAddress, isMiniPay]);
+
+  const connectMiniPay = async () => {
     try {
-      if (typeof window === 'undefined' || !(window as any).ethereum) return;
       const accounts = await (window as any).ethereum.request({ method: 'eth_requestAccounts' });
       if (accounts?.[0]) setWalletAddress(accounts[0]);
-    } catch (err: any) {
-      console.warn('Wallet connect error:', err);
-      if (err?.code === 4001) {
-        setError('Connection rejected. Please approve the request in MetaMask.');
-      } else if (err?.code === -32002) {
-        setError('Request already pending. Please open MetaMask to approve.');
-      } else {
-        setError(err?.message || 'Failed to connect wallet');
-      }
+    } catch (err) {
+      console.error('MiniPay connect error:', err);
     }
   };
 
@@ -114,16 +86,13 @@ export default function Home() {
     try {
       let paymentTxHash = 'simulated_' + Date.now();
 
-      if (isMiniPay && walletAddress && window.ethereum) {
+      if (isMiniPay && walletAddress && (window as any).ethereum) {
+        // MiniPay payment
         const walletClient = createWalletClient({
           chain: celo,
-          transport: custom(window.ethereum as any),
+          transport: custom((window as any).ethereum),
         });
-
-        const publicClient = createPublicClient({
-          chain: celo,
-          transport: http(),
-        });
+        const publicClient = createPublicClient({ chain: celo, transport: http() });
 
         const hash = await walletClient.writeContract({
           address: CUSD_CONTRACT,
@@ -131,6 +100,23 @@ export default function Home() {
           functionName: 'transfer',
           args: [TREASURY_ADDRESS, parseEther(PRICE_CUSD)],
           account: walletAddress as `0x${string}`,
+        });
+
+        await publicClient.waitForTransactionReceipt({ hash });
+        paymentTxHash = hash;
+        setTxHash(hash);
+
+      } else if (isConnected && rainbowAddress && walletClientData) {
+        // RainbowKit/MetaMask payment
+        const publicClient = createPublicClient({ chain: celo, transport: http() });
+
+        const hash = await walletClientData.writeContract({
+          address: CUSD_CONTRACT,
+          abi: CUSD_ABI,
+          functionName: 'transfer',
+          args: [TREASURY_ADDRESS, parseEther(PRICE_CUSD)],
+          account: rainbowAddress,
+          chain: celo,
         });
 
         await publicClient.waitForTransactionReceipt({ hash });
@@ -158,6 +144,16 @@ export default function Home() {
     }
   };
 
+  const handleSaveImage = () => {
+    if (!imageUrl) return;
+    const a = document.createElement('a');
+    a.href = imageUrl;
+    a.download = 'flashart-image.png';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
   const handleReset = () => {
     setPrompt('');
     setImageUrl(null);
@@ -165,6 +161,8 @@ export default function Home() {
     setTxHash(null);
     setStep('input');
   };
+
+  const isWalletConnected = isMiniPay ? !!walletAddress : isConnected;
 
   return (
     <main className="min-h-screen bg-[#0a0a0f] text-white overflow-x-hidden">
@@ -186,33 +184,19 @@ export default function Home() {
             AI image generation. No subscription. Just pay per image.
           </p>
 
-          {walletAddress && (
+          {/* Wallet status */}
+          {isWalletConnected && (
             <div className="mt-4 inline-flex items-center gap-2 bg-green-500/10 border border-green-500/20 rounded-full px-3 py-1 text-xs text-green-400">
-              ✓ {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
+              ✓ {(rainbowAddress || walletAddress)?.slice(0, 6)}...{(rainbowAddress || walletAddress)?.slice(-4)}
             </div>
           )}
 
-          {!isMiniPay && !walletAddress && (
-            <div className="mt-4 space-y-3">
+          {/* Connect wallet for non-MiniPay */}
+          {!isMiniPay && mounted && (
+            <div className="mt-4 space-y-2">
               <div className="flex justify-center">
-                {!mounted ? (
-                  <div className="h-10 w-[160px] bg-white/5 animate-pulse rounded-xl" />
-                ) : typeof window !== 'undefined' && (window as any).ethereum ? (
-                  <button
-                    onClick={connectWallet}
-                    className="bg-[#ff6b2b] hover:bg-[#ff8c50] text-white font-bold py-2.5 px-6 rounded-xl transition-all text-sm flex items-center gap-2 shadow-lg shadow-[#ff6b2b]/20 cursor-pointer"
-                  >
-                    Connect Wallet
-                  </button>
-                ) : (
-                  <ConnectButton />
-                )}
+                <ConnectButton />
               </div>
-              {error && (
-                <p className="text-red-400/80 text-xs text-center max-w-xs mx-auto bg-red-400/5 border border-red-400/10 rounded-lg py-1.5 px-3">
-                  ⚠️ {error}
-                </p>
-              )}
               <p className="text-white/30 text-xs text-center">
                 📱 On mobile? Open in <a href="https://minipay.opera.com" className="text-[#ff6b2b]">MiniPay</a> for best experience
               </p>
@@ -278,7 +262,7 @@ export default function Home() {
               <div>
                 <h2 className="text-2xl font-bold mb-2">Confirm Payment</h2>
                 <p className="text-white/40 text-sm">
-                  {isMiniPay ? 'Real cUSD payment via MiniPay' : 'One-time charge to generate your image'}
+                  {isWalletConnected ? 'Real cUSD payment on Celo' : 'Demo mode — connect wallet for real payment'}
                 </p>
               </div>
 
@@ -293,7 +277,7 @@ export default function Home() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-white/40">Payment</span>
-                  <span className="text-white/80">{isMiniPay ? 'cUSD on Celo' : 'Demo mode'}</span>
+                  <span className="text-white/80">{isWalletConnected ? 'cUSD on Celo' : 'Demo mode'}</span>
                 </div>
                 <div className="h-px bg-white/10" />
                 <div className="flex justify-between font-bold">
@@ -311,7 +295,7 @@ export default function Home() {
                   {loading ? (
                     <span className="flex items-center justify-center gap-2">
                       <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block" />
-                      {isMiniPay ? 'Processing payment...' : 'Generating...'}
+                      Processing payment...
                     </span>
                   ) : (
                     `Pay ${PRICE_CUSD} cUSD & Generate`
@@ -356,7 +340,7 @@ export default function Home() {
 
             <div className="flex gap-3">
               <button
-                onClick={() => window.open(imageUrl!, '_blank')}
+                onClick={handleSaveImage}
                 className="flex-1 bg-white/10 hover:bg-white/20 text-white font-semibold py-3 rounded-2xl text-center transition-all text-sm"
               >
                 ⬇ Save Image
