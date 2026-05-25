@@ -9,7 +9,7 @@ const STYLES = [
   { id: 'photorealistic', label: '📸 Photorealistic', suffix: 'photorealistic, 8k, ultra detailed' },
   { id: 'anime', label: '🎌 Anime', suffix: 'anime style, vibrant, studio ghibli inspired' },
   { id: 'oil-painting', label: '🖼️ Oil Painting', suffix: 'oil painting, classical art, museum quality' },
-  { id: 'logo', label: '✏️ Logo / Flat', suffix: 'minimalist logo design, flat vector illustration, simple bold shapes, solid color background, professional brand identity, no gradients, clean lines' },
+{ id: 'logo', label: '🎨 Illustration', suffix: 'digital illustration, vibrant colors, detailed artwork, professional design, sharp edges, concept art' },
   { id: 'cinematic', label: '🎬 Cinematic', suffix: 'cinematic, dramatic lighting, movie still' },
   { id: 'afrofuturism', label: '🌍 Afrofuturism', suffix: 'afrofuturism art, rich african culture, futuristic technology, vibrant colors, cosmic background, powerful black figures, detailed illustration' },
 ];
@@ -305,10 +305,10 @@ export default function Home() {
 
             <div className="flex gap-3">
               <button
-                onClick={handleDownload}
+                onClick={() => window.open(imageUrl!, '_blank')}
                 className="flex-1 bg-white/10 hover:bg-white/20 text-white font-semibold py-3 rounded-2xl text-center transition-all text-sm"
               >
-                ⬇ Download
+                ⬇ Save Image
               </button>
               <button
                 onClick={handleReset}
