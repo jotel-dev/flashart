@@ -203,8 +203,8 @@ export default function Home() {
           <button
             type="button"
             onClick={() => scrollToSection('generator-section')}
-            className={`cursor-pointer transition-all pb-1 hover:text-white ${
-              step === 'input' ? 'text-white border-b-2 border-[#ff6b2b]' : ''
+            className={`cursor-pointer transition-all pb-1 hover:text-white bg-transparent border-0 outline-none p-0 focus:outline-none ${
+              step === 'input' ? 'text-white border-b-2 border-[#ff6b2b]' : 'border-b-2 border-transparent'
             }`}
           >
             Generator
@@ -212,14 +212,14 @@ export default function Home() {
           <button
             type="button"
             onClick={() => scrollToSection('styles-section')}
-            className="hover:text-white transition-colors cursor-pointer pb-1"
+            className="hover:text-white transition-colors cursor-pointer pb-1 bg-transparent border-0 outline-none p-0 focus:outline-none border-b-2 border-transparent"
           >
             Styles
           </button>
           <button
             type="button"
             onClick={() => scrollToSection('pricing-section')}
-            className="hover:text-white transition-colors cursor-pointer pb-1"
+            className="hover:text-white transition-colors cursor-pointer pb-1 bg-transparent border-0 outline-none p-0 focus:outline-none border-b-2 border-transparent"
           >
             Pricing
           </button>
