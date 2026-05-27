@@ -258,7 +258,7 @@ export default function Home() {
         
         {/* Hero Section */}
         <div className="text-center max-w-3xl mx-auto mb-10">
-          <div id="pricing-section" className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-1.5 text-xs text-white/50 mb-6 backdrop-blur-md">
+          <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-1.5 text-xs text-white/50 mb-6 backdrop-blur-md">
             <span className="w-1.5 h-1.5 rounded-full bg-[#ff6b2b] animate-pulse inline-block" />
             {isMiniPay ? '🟢 MiniPay Connected' : 'Celo Network'} · Pay {PRICE_CELO} CELO per image
           </div>
@@ -511,6 +511,50 @@ export default function Home() {
             </div>
           </div>
         )}
+
+        {/* Pricing Section */}
+        <div id="pricing-section" className="w-full max-w-4xl mx-auto mt-24 mb-16 relative z-10">
+          <div className="glass-panel rounded-3xl p-8 sm:p-12 relative overflow-hidden shadow-[0_0_50px_rgba(255,107,43,0.05)] border border-[#ff6b2b]/10">
+            {/* Background absolute glow blobs */}
+            <div className="absolute top-[-50%] right-[-20%] w-[300px] h-[300px] rounded-full bg-[#ff6b2b] opacity-[0.05] blur-[80px]" />
+            <div className="absolute bottom-[-50%] left-[-20%] w-[300px] h-[300px] rounded-full bg-[#7c3aed] opacity-[0.05] blur-[80px]" />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+              <div>
+                <span className="text-[10px] bg-[#ff6b2b]/15 text-[#ff8c50] border border-[#ff6b2b]/25 px-3 py-1 rounded-full font-bold uppercase tracking-wider">
+                  Transparent Pricing
+                </span>
+                <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight mt-4 mb-4">
+                  Pay Only For <br />
+                  What You Create
+                </h2>
+                <p className="text-white/50 text-sm sm:text-base leading-relaxed">
+                  No monthly subscriptions, hidden fees, or token packages. Connect your Web3 wallet and pay directly onchain for each generation.
+                </p>
+              </div>
+
+              <div className="bg-black/45 border border-white/5 rounded-2xl p-6 sm:p-8 text-center space-y-4 shadow-xl">
+                <div className="text-xs text-white/40 font-bold uppercase tracking-wider">Single Image Generation</div>
+                <div className="text-5xl font-black text-[#ff6b2b] tracking-tight">
+                  {PRICE_CELO} <span className="text-lg text-white/80 font-bold">CELO</span>
+                </div>
+                <div className="text-xs text-white/30">≈ $0.001 USD per generation</div>
+                <div className="h-px bg-white/10 my-4" />
+                <ul className="text-left text-xs sm:text-sm text-white/60 space-y-2 max-w-[200px] mx-auto">
+                  <li className="flex items-center gap-2">
+                    <span className="text-[#ff6b2b]">✓</span> Fast GPU generation
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-[#ff6b2b]">✓</span> Ultra-high resolution (8K)
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-[#ff6b2b]">✓</span> Stability AI Model
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
 
       </div>
 
