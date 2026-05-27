@@ -288,20 +288,21 @@ export default function Home() {
               <div className="px-3 py-2 text-[10px] font-bold text-white/30 tracking-widest uppercase mb-1">
                 Choose Art Style
               </div>
-              <div className="grid grid-cols-2 lg:grid-cols-1 gap-1">
+              <div className="grid grid-cols-2 lg:grid-cols-1 gap-1.5">
                 {STYLES.map((style) => {
                   const isActive = selectedStyle.id === style.id;
                   return (
                     <button
                       key={style.id}
+                      type="button"
                       onClick={() => setSelectedStyle(style)}
-                      className={`px-4 py-3 rounded-xl text-xs sm:text-sm font-medium transition-all text-left flex items-center justify-between ${
+                      className={`px-4 py-3 rounded-xl text-xs sm:text-sm font-medium transition-all text-left flex items-center justify-between cursor-pointer relative z-20 ${
                         isActive
                           ? 'bg-[#ff6b2b]/10 text-white border border-[#ff6b2b]/30 shadow-[0_0_15px_rgba(255,107,43,0.1)]'
                           : 'text-white/40 border border-transparent hover:text-white/80 hover:bg-white/5'
                       }`}
                     >
-                      <span>{style.label.split(' ')[1]}</span>
+                      <span>{style.label}</span>
                       {isActive && <span className="w-1.5 h-1.5 rounded-full bg-[#ff6b2b]" />}
                     </button>
                   );
