@@ -156,11 +156,11 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-[#0a0a0f] text-white relative font-space flex flex-col justify-between">
-      {/* Background ambient glows */}
+      {/* Background ambient glows with motion design */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-[#ff6b2b] opacity-[0.04] blur-[150px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-[#7c3aed] opacity-[0.05] blur-[150px]" />
-        <div className="absolute top-[40%] left-[50%] -translate-x-[50%] -translate-y-[50%] w-[80vw] h-[50vh] rounded-full bg-gradient-to-tr from-[#ff6b2b]/5 to-[#7c3aed]/5 opacity-60 blur-[130px]" />
+        <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-[#ff6b2b] opacity-[0.04] blur-[150px] animate-drift-one" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-[#7c3aed] opacity-[0.05] blur-[150px] animate-drift-two" />
+        <div className="absolute top-[40%] left-[50%] -translate-x-[50%] -translate-y-[50%] w-[80vw] h-[50vh] rounded-full bg-gradient-to-tr from-[#ff6b2b]/5 to-[#7c3aed]/5 opacity-60 blur-[130px] animate-pulse-slow" />
       </div>
 
       {/* Header Navigation */}
