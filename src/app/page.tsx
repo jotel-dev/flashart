@@ -165,10 +165,21 @@ export default function Home() {
 
       {/* Header Navigation */}
       <header className="relative z-20 max-w-7xl mx-auto w-full px-6 py-6 flex items-center justify-between">
-        <div className="flex items-center gap-2 select-none">
-          <div className="w-8 h-8 rounded-lg bg-[#ff6b2b] flex items-center justify-center shadow-[0_0_15px_rgba(255,107,43,0.4)]">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4.5 h-4.5 text-white">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+        <div className="flex items-center gap-3 select-none">
+          <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shadow-[0_0_15px_rgba(255,107,43,0.15)] relative overflow-hidden group hover:border-[#ff6b2b]/30 transition-all duration-300">
+            <svg className="w-5.5 h-5.5 text-white group-hover:text-[#ff6b2b] transition-colors duration-300" viewBox="0 0 24 24" fill="currentColor">
+              {/* Background Swoosh/Wing */}
+              <path d="M7.5 11.5c-2.5-3.5-1.5-7.5.5-10-1 4.5 1 7.5 3.5 9-2.5-1-4 1-4 1z" />
+              {/* Artist Palette */}
+              <path d="M12.5 18c-3 0-5-2-4.5-4 .5-1.5 2-2.5 3.5-2 1.5.5 2 2 1.5 3.5-.5 1-1 1.5-1.5 2.5.5-1 1.5-1.5 2.5-1 1 .5 1.5 2 .5 3-.5 1-2.5 1-4.5 1z" opacity="0.85" />
+              {/* Thumb hole */}
+              <circle cx="10" cy="15" r="0.6" fill="#ff6b2b" />
+              {/* Brush 1 */}
+              <path d="M11 15.5l5.5-8.5.5-.8.5.8-5.5 8.5h-1z" fill="#ff6b2b" />
+              {/* Brush 2 */}
+              <path d="M12.5 16l5.5-8.5.5-.8.5.8-5.5 8.5h-1z" fill="#ff6b2b" />
+              {/* Palette Knife */}
+              <path d="M14 16.5l4.5-6.5.6-1 .4.2-.2 1.2-4.5 6.5h-.8z" fill="#ff6b2b" />
             </svg>
           </div>
           <span className="text-xl font-bold tracking-tight">
