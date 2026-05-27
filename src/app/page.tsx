@@ -154,6 +154,18 @@ export default function Home() {
     setStep('input');
   };
 
+  const scrollToSection = (sectionId: string) => {
+    if (step !== 'input') {
+      setStep('input');
+    }
+    setTimeout(() => {
+      const element = document.getElementById(sectionId);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 50);
+  };
+
   return (
     <main className="min-h-screen bg-[#0a0a0f] text-white relative font-space flex flex-col justify-between">
       {/* Background ambient glows with motion design */}
@@ -188,9 +200,29 @@ export default function Home() {
         </div>
 
         <nav className="hidden md:flex items-center gap-8 text-sm text-white/50 font-medium">
-          <span className="text-white border-b-2 border-[#ff6b2b] pb-1 cursor-pointer">Generator</span>
-          <span className="hover:text-white transition-colors cursor-pointer">Styles</span>
-          <span className="hover:text-white transition-colors cursor-pointer">Pricing</span>
+          <button
+            type="button"
+            onClick={() => scrollToSection('generator-section')}
+            className={`cursor-pointer transition-all pb-1 hover:text-white ${
+              step === 'input' ? 'text-white border-b-2 border-[#ff6b2b]' : ''
+            }`}
+          >
+            Generator
+          </button>
+          <button
+            type="button"
+            onClick={() => scrollToSection('styles-section')}
+            className="hover:text-white transition-colors cursor-pointer pb-1"
+          >
+            Styles
+          </button>
+          <button
+            type="button"
+            onClick={() => scrollToSection('pricing-section')}
+            className="hover:text-white transition-colors cursor-pointer pb-1"
+          >
+            Pricing
+          </button>
         </nav>
 
         <div>
@@ -226,7 +258,7 @@ export default function Home() {
         
         {/* Hero Section */}
         <div className="text-center max-w-3xl mx-auto mb-10">
-          <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-1.5 text-xs text-white/50 mb-6 backdrop-blur-md">
+          <div id="pricing-section" className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-1.5 text-xs text-white/50 mb-6 backdrop-blur-md">
             <span className="w-1.5 h-1.5 rounded-full bg-[#ff6b2b] animate-pulse inline-block" />
             {isMiniPay ? '🟢 MiniPay Connected' : 'Celo Network'} · Pay {PRICE_CELO} CELO per image
           </div>
@@ -241,7 +273,7 @@ export default function Home() {
 
         {/* Input Bar */}
         {step === 'input' && (
-          <div className="w-full max-w-2xl mx-auto mb-16">
+          <div id="generator-section" className="w-full max-w-2xl mx-auto mb-16">
             <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-full p-2 pl-5 focus-within:border-[#ff6b2b]/40 focus-within:shadow-[0_0_30px_rgba(255,107,43,0.12)] transition-all duration-300 backdrop-blur-md">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" className="w-5 h-5 text-white/30">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 21l-.813-5.096L3 15l5.096-.813L9 9l.813 5.096L15 15l-5.187.904ZM18 7.5l-.375 2.25L15.375 10l2.25.375L18 12.75l.375-2.25L20.625 10l-2.25-.375L18 7.5ZM20.25 3.375l-.188 1.125-1.125.188 1.125.188.188 1.125.188-1.125 1.125-.188-1.125-.188-.188-1.125Z" />
@@ -281,7 +313,7 @@ export default function Home() {
 
         {/* Styles & Previews Deck */}
         {step === 'input' && (
-          <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center mt-4">
+          <div id="styles-section" className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center mt-4">
             
             {/* Left Overlay style selection */}
             <div className="lg:col-span-4 glass-panel rounded-2xl p-2.5 space-y-1 relative z-10">
