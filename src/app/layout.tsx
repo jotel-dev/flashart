@@ -1,18 +1,25 @@
  import type { Metadata } from 'next';
-import { Space_Grotesk } from 'next/font/google';
+import { Space_Grotesk, Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
+  variable: '--font-space-grotesk',
+});
+
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-jakarta',
 });
 
 export const metadata: Metadata = {
   title: 'FlashArt – AI Image Generation on Celo',
-  description: 'Generate stunning AI images. Pay per image with cUSD on Celo. No subscription needed.',
+  description: 'Generate stunning AI images. Pay per image with CELO on Celo. No subscription needed.',
   openGraph: {
     title: 'FlashArt – AI Image Generation on Celo',
-    description: 'Generate stunning AI images. Pay per image with cUSD on Celo. No subscription needed.',
+    description: 'Generate stunning AI images. Pay per image with CELO on Celo. No subscription needed.',
     url: 'https://flashart.vercel.app',
     siteName: 'FlashArt',
     images: [{ url: 'https://flashart.vercel.app/og-image.png', width: 1200, height: 630 }],
@@ -24,8 +31,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body className={spaceGrotesk.className}>{children}</body>
+    <html lang="en" className={`${spaceGrotesk.variable} ${plusJakartaSans.variable}`}>
+      <body className="antialiased font-sans bg-[#030303] text-white selection:bg-[#ff6b2b]/30 selection:text-white">
+        {children}
+      </body>
     </html>
   );
 }

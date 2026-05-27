@@ -1,11 +1,20 @@
  'use client';
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
 import { createWalletClient, custom, parseEther, createPublicClient, http } from 'viem';
 import { celo } from 'viem/chains';
 
-const STYLES = [
+import NeonGlow from '../components/ui/NeonGlow';
+import { BentoGrid, BentoCard } from '../components/ui/Bento';
+import ConnectWallet from '../components/ui/ConnectWallet';
+import StyleSelector, { StyleType } from '../components/ui/StyleSelector';
+import PromptInput from '../components/ui/PromptInput';
+import PreviewDeck from '../components/ui/PreviewDeck';
+import PaymentPanel from '../components/ui/PaymentPanel';
+import ResultPanel from '../components/ui/ResultPanel';
+import ThemeToggle from '../components/ui/ThemeToggle';
+
+const STYLES: StyleType[] = [
   { id: 'photorealistic', label: '📸 Photorealistic', suffix: 'photorealistic, 8k, ultra detailed' },
   { id: 'anime', label: '🎌 Anime', suffix: 'anime style, vibrant, studio ghibli inspired' },
   { id: 'oil-painting', label: '🖼️ Oil Painting', suffix: 'oil painting, classical art, museum quality' },
@@ -14,7 +23,7 @@ const STYLES = [
   { id: 'afrofuturism', label: '🌍 Afrofuturism', suffix: 'afrofuturism art, rich african culture, futuristic technology, vibrant colors, cosmic background, powerful black figures, detailed illustration' },
 ];
 
-const PRICE_CELO = '0.001';
+const PRICE_CELO = '0.01';
 const FLASHART_CONTRACT = '0xBa3D984C36c5a34d37897f7d3CD4c6E5BB6CF568' as `0x${string}`;
 const FLASHART_ABI = [
   {
@@ -30,7 +39,7 @@ const FLASHART_ABI = [
 
 export default function Home() {
   const [prompt, setPrompt] = useState('');
-  const [selectedStyle, setSelectedStyle] = useState(STYLES[1]); // Anime default
+  const [selectedStyle, setSelectedStyle] = useState<StyleType>(STYLES[1]); // Anime default
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -38,8 +47,16 @@ export default function Home() {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [isMiniPay, setIsMiniPay] = useState(false);
   const [txHash, setTxHash] = useState<string | null>(null);
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
 
   useEffect(() => {
+    // Theme setup
+    const savedTheme = localStorage.getItem('theme') as 'dark' | 'light' | null;
+    const initialTheme = savedTheme || 'dark';
+    setTheme(initialTheme);
+    document.documentElement.className = initialTheme;
+
+    // Wallet setup
     const ethereum = (window as any).ethereum;
     if (!ethereum) return;
 
@@ -58,6 +75,13 @@ export default function Home() {
       });
     }
   }, []);
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+    document.documentElement.className = newTheme;
+  };
 
   const connectWallet = async () => {
     try {
@@ -101,6 +125,21 @@ export default function Home() {
           transport: custom((window as any).ethereum),
         });
         const publicClient = createPublicClient({ chain: celo, transport: http() });
+
+        // Switch to Celo chain if user is on a different network
+        try {
+          await walletClient.switchChain({ id: celo.id });
+        } catch (switchError: any) {
+          if (switchError.code === 4902 || switchError.message?.includes('Unrecognized chain') || switchError.message?.includes('4902')) {
+            try {
+              await walletClient.addChain({ chain: celo });
+            } catch (addError) {
+              throw new Error('Failed to add Celo network to wallet.');
+            }
+          } else {
+            throw new Error('Failed to switch network. Please switch to Celo manually in your wallet.');
+          }
+        }
 
         const hash = await walletClient.writeContract({
           address: FLASHART_CONTRACT,
@@ -154,427 +193,215 @@ export default function Home() {
     setStep('input');
   };
 
-  const scrollToSection = (sectionId: string) => {
-    if (step !== 'input') {
-      setStep('input');
-    }
-    setTimeout(() => {
-      const element = document.getElementById(sectionId);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }, 50);
-  };
-
   return (
-    <main className="min-h-screen bg-[#0a0a0f] text-white relative font-space flex flex-col justify-between">
-      {/* Background ambient glows with motion design */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-[#ff6b2b] opacity-[0.04] blur-[150px] animate-drift-one" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-[#7c3aed] opacity-[0.05] blur-[150px] animate-drift-two" />
-        <div className="absolute top-[40%] left-[50%] -translate-x-[50%] -translate-y-[50%] w-[80vw] h-[50vh] rounded-full bg-gradient-to-tr from-[#ff6b2b]/5 to-[#7c3aed]/5 opacity-60 blur-[130px] animate-pulse-slow" />
-      </div>
+    <main className="min-h-screen text-text-primary relative flex flex-col justify-between p-4 sm:p-6 md:p-8 overflow-hidden bg-background transition-colors duration-500">
+      {/* Premium ambient glows */}
+      <NeonGlow />
 
-      {/* Header Navigation */}
-      <header className="relative z-20 max-w-7xl mx-auto w-full px-6 py-6 flex items-center justify-between">
-        <div className="flex items-center gap-3 select-none">
-          <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shadow-[0_0_15px_rgba(255,107,43,0.15)] relative overflow-hidden group hover:border-[#ff6b2b]/30 transition-all duration-300">
-            <svg className="w-5.5 h-5.5 text-white group-hover:text-[#ff6b2b] transition-colors duration-300" viewBox="0 0 24 24" fill="currentColor">
-              {/* Background Swoosh/Wing */}
-              <path d="M7.5 11.5c-2.5-3.5-1.5-7.5.5-10-1 4.5 1 7.5 3.5 9-2.5-1-4 1-4 1z" />
-              {/* Artist Palette */}
-              <path d="M12.5 18c-3 0-5-2-4.5-4 .5-1.5 2-2.5 3.5-2 1.5.5 2 2 1.5 3.5-.5 1-1 1.5-1.5 2.5.5-1 1.5-1.5 2.5-1 1 .5 1.5 2 .5 3-.5 1-2.5 1-4.5 1z" opacity="0.85" />
-              {/* Thumb hole */}
-              <circle cx="10" cy="15" r="0.6" fill="#ff6b2b" />
-              {/* Brush 1 */}
-              <path d="M11 15.5l5.5-8.5.5-.8.5.8-5.5 8.5h-1z" fill="#ff6b2b" />
-              {/* Brush 2 */}
-              <path d="M12.5 16l5.5-8.5.5-.8.5.8-5.5 8.5h-1z" fill="#ff6b2b" />
-              {/* Palette Knife */}
-              <path d="M14 16.5l4.5-6.5.6-1 .4.2-.2 1.2-4.5 6.5h-.8z" fill="#ff6b2b" />
-            </svg>
-          </div>
-          <span className="text-xl font-bold tracking-tight">
-            Flash<span className="text-[#ff6b2b]">Art</span>
-          </span>
-        </div>
-
-        <nav className="hidden md:flex items-center gap-8 text-sm text-white/50 font-medium">
-          <button
-            type="button"
-            onClick={() => scrollToSection('generator-section')}
-            className={`cursor-pointer transition-all pb-1 hover:text-white bg-transparent border-0 outline-none p-0 focus:outline-none ${
-              step === 'input' ? 'text-white border-b-2 border-[#ff6b2b]' : 'border-b-2 border-transparent'
-            }`}
-          >
-            Generator
-          </button>
-          <button
-            type="button"
-            onClick={() => scrollToSection('styles-section')}
-            className="hover:text-white transition-colors cursor-pointer pb-1 bg-transparent border-0 outline-none p-0 focus:outline-none border-b-2 border-transparent"
-          >
-            Styles
-          </button>
-          <button
-            type="button"
-            onClick={() => scrollToSection('pricing-section')}
-            className="hover:text-white transition-colors cursor-pointer pb-1 bg-transparent border-0 outline-none p-0 focus:outline-none border-b-2 border-transparent"
-          >
-            Pricing
-          </button>
-        </nav>
-
-        <div>
-          {walletAddress ? (
-            <div className="flex items-center gap-3">
-              <button 
-                onClick={disconnectWallet}
-                className="hidden sm:inline-flex text-xs text-white/40 hover:text-white/80 transition-colors"
-              >
-                Disconnect
-              </button>
-              <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white/90 shadow-[0_0_15px_rgba(255,255,255,0.02)]">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                <span>{walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}</span>
-              </div>
-            </div>
-          ) : (
-            <button
-              onClick={connectWallet}
-              className="inline-flex items-center gap-2 bg-[#ff6b2b] hover:bg-[#ff8c50] text-white font-bold py-2 px-5 rounded-xl transition-all duration-300 text-sm shadow-[0_0_20px_rgba(255,107,43,0.2)] hover:shadow-[0_0_25px_rgba(255,107,43,0.35)] hover:scale-[1.02] active:scale-[0.98]"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a2.25 2.25 0 0 0-2.25-2.25H15a3 3 0 1 1-6 0H5.25A2.25 2.25 0 0 0 3 12m18 0v6a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 18v-6m18 0V9M3 12V9m18-3a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 6" />
+      <div className="relative z-10 w-full max-w-7xl mx-auto flex-1 flex flex-col justify-between gap-8 md:gap-10">
+        {/* Navigation Bar */}
+        <header className="flex items-center justify-between w-full">
+          <div className="flex items-center gap-2 sm:gap-3 select-none">
+            <div className="w-8 h-8 rounded-lg bg-card-bg border border-card-border flex items-center justify-center shadow-[0_0_15px_rgba(255,94,0,0.15)] relative overflow-hidden transition-premium hover:border-cyber-orange/40 hover:scale-105">
+              <svg className="w-4 h-4 text-text-primary" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M7.5 11.5c-2.5-3.5-1.5-7.5.5-10-1 4.5 1 7.5 3.5 9-2.5-1-4 1-4 1z" />
+                <path d="M12.5 18c-3 0-5-2-4.5-4 .5-1.5 2-2.5 3.5-2 1.5.5 2 2 1.5 3.5-.5 1-1 1.5-1.5 2.5.5-1 1.5-1.5 2.5-1 1 .5 1.5 2 .5 3-.5 1-2.5 1-4.5 1z" opacity="0.85" />
+                <circle cx="10" cy="15" r="0.6" fill="#ff5e00" />
+                <path d="M11 15.5l5.5-8.5.5-.8.5.8-5.5 8.5h-1z" fill="#ff5e00" />
+                <path d="M12.5 16l5.5-8.5.5-.8.5.8-5.5 8.5h-1z" fill="#ff5e00" />
+                <path d="M14 16.5l4.5-6.5.6-1 .4.2-.2 1.2-4.5 6.5h-.8z" fill="#ff5e00" />
               </svg>
-              Connect Wallet
-            </button>
-          )}
-        </div>
-      </header>
-
-      {/* Main Content Area */}
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center w-full max-w-7xl mx-auto px-6 py-6">
-        
-        {/* Hero Section */}
-        <div className="text-center max-w-3xl mx-auto mb-10">
-          <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-1.5 text-xs text-white/50 mb-6 backdrop-blur-md">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#ff6b2b] animate-pulse inline-block" />
-            {isMiniPay ? '🟢 MiniPay Connected' : 'Celo Network'} · Pay {PRICE_CELO} CELO per image
+            </div>
+            <span className="font-space text-base sm:text-lg font-bold tracking-tight text-text-primary">
+              FLASH<span className="text-cyber-orange">ART</span>
+            </span>
           </div>
-          <h1 className="text-4xl sm:text-6xl font-black tracking-tight leading-[1.1] mb-6">
-            Create <span className="text-gradient-orange">Stunning Art</span> <br />
-            from Text
+
+          <div className="flex items-center gap-2 sm:gap-3">
+            <ThemeToggle theme={theme} onToggle={toggleTheme} />
+            <ConnectWallet
+              walletAddress={walletAddress}
+              connectWallet={connectWallet}
+              disconnectWallet={disconnectWallet}
+            />
+          </div>
+        </header>
+
+        {/* Hero Headline Section */}
+        <section className="max-w-2xl mt-2 sm:mt-4 space-y-3 sm:space-y-4">
+          <div className="inline-flex items-center gap-2.5 bg-card-bg border border-card-border rounded-full px-4 py-1.5 text-[9px] text-text-muted font-bold uppercase tracking-wider shadow-sm">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyber-orange opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-cyber-orange"></span>
+            </span>
+            {isMiniPay ? '🟢 MiniPay Connected' : 'Celo Network Integration'}
+          </div>
+          <h1 className="font-space text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight leading-[1.15] text-text-primary">
+            Generate <span className="text-gradient-orange">Stunning AI Art</span> <br />
+            from Pure Text
           </h1>
-          <p className="text-white/45 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
-            Turn your ideas into digital artwork. Paid with CELO on Celo. No monthly subscription. Pay only for what you generate.
+          <p className="text-text-muted text-xs sm:text-sm leading-relaxed max-w-lg font-medium">
+            Transform your concepts into digital outputs. Secured and paid instantly using CELO on the Celo network. No recurring monthly subscriptions. Pay only for what you build.
           </p>
-        </div>
+        </section>
 
-        {/* Input Bar */}
-        {step === 'input' && (
-          <div id="generator-section" className="w-full max-w-2xl mx-auto mb-16">
-            <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-full p-2 pl-5 focus-within:border-[#ff6b2b]/40 focus-within:shadow-[0_0_30px_rgba(255,107,43,0.12)] transition-all duration-300 backdrop-blur-md">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" className="w-5 h-5 text-white/30">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 21l-.813-5.096L3 15l5.096-.813L9 9l.813 5.096L15 15l-5.187.904ZM18 7.5l-.375 2.25L15.375 10l2.25.375L18 12.75l.375-2.25L20.625 10l-2.25-.375L18 7.5ZM20.25 3.375l-.188 1.125-1.125.188 1.125.188.188 1.125.188-1.125 1.125-.188-1.125-.188-.188-1.125Z" />
-              </svg>
-              <input
-                type="text"
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && prompt.trim()) {
-                    handleGenerate();
-                  }
-                }}
-                placeholder="A modern anime office workspace, natural light..."
-                className="flex-1 bg-transparent border-none text-white placeholder-white/20 text-sm sm:text-base focus:outline-none py-2"
-              />
-              <button
-                onClick={handleGenerate}
-                disabled={!prompt.trim()}
-                className="w-10 h-10 rounded-full bg-[#ff6b2b] hover:bg-[#ff8c50] disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-all duration-300 shadow-[0_0_15px_rgba(255,107,43,0.3)] hover:scale-105 active:scale-95"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5 text-white">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 10.5 12 3m0 0 7.5 7.5M12 3v18" />
-                </svg>
-              </button>
-            </div>
-            {error && (
-              <p className="text-red-400/80 text-xs text-center mt-3 bg-red-500/10 border border-red-500/20 rounded-xl py-2 px-4 inline-block mx-auto">{error}</p>
-            )}
-            {!walletAddress && (
-              <p className="text-white/20 text-xs text-center mt-3">
-                📱 On mobile? Open in <a href="https://minipay.opera.com" className="text-[#ff6b2b] underline">MiniPay</a> for the best experience
-              </p>
-            )}
-          </div>
-        )}
-
-        {/* Styles & Previews Deck */}
-        {step === 'input' && (
-          <div id="styles-section" className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center mt-4">
-            
-            {/* Left Overlay style selection */}
-            <div className="lg:col-span-4 glass-panel rounded-2xl p-2.5 space-y-1 relative z-10">
-              <div className="px-3 py-2 text-[10px] font-bold text-white/30 tracking-widest uppercase mb-1">
-                Choose Art Style
-              </div>
-              <div className="grid grid-cols-2 lg:grid-cols-1 gap-1.5">
-                {STYLES.map((style) => {
-                  const isActive = selectedStyle.id === style.id;
-                  return (
-                    <button
-                      key={style.id}
-                      type="button"
-                      onClick={() => setSelectedStyle(style)}
-                      className={`px-4 py-3 rounded-xl text-xs sm:text-sm font-medium transition-all text-left flex items-center justify-between cursor-pointer relative z-20 ${
-                        isActive
-                          ? 'bg-[#ff6b2b]/10 text-white border border-[#ff6b2b]/30 shadow-[0_0_15px_rgba(255,107,43,0.1)]'
-                          : 'text-white/40 border border-transparent hover:text-white/80 hover:bg-white/5'
-                      }`}
-                    >
-                      <span>{style.label}</span>
-                      {isActive && <span className="w-1.5 h-1.5 rounded-full bg-[#ff6b2b]" />}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Right 3 Preview Cards Deck */}
-            <div className="lg:col-span-8 grid grid-cols-3 gap-4 items-center">
-              {/* Card 1: Photorealistic */}
-              <div className="relative aspect-[3/4] rounded-2xl overflow-hidden border border-white/5 opacity-55 hover:opacity-90 hover:scale-[1.02] transition-all duration-500 shadow-xl group">
-                <Image
-                  src="/preview-photo.png"
-                  alt="Photorealistic preview"
-                  fill
-                  sizes="(max-width: 768px) 33vw, 20vw"
-                  className="object-cover transition-transform duration-700 group-hover:scale-105"
-                  priority
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-3">
-                  <span className="text-[10px] sm:text-xs text-white/50 font-bold uppercase tracking-wider">Photorealistic</span>
-                </div>
-              </div>
-
-              {/* Card 2: Anime Hero Image (Featured Center) */}
-              <div className="relative aspect-[3/4] rounded-2xl overflow-hidden border border-[#ff6b2b]/30 shadow-[0_0_35px_rgba(255,107,43,0.18)] scale-[1.06] hover:scale-[1.09] transition-all duration-500 z-10 group">
-                <Image
-                  src="/hero-anime.png"
-                  alt="Anime Hero character"
-                  fill
-                  sizes="(max-width: 768px) 33vw, 25vw"
-                  className="object-cover transition-transform duration-700 group-hover:scale-105"
-                  priority
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/10 to-transparent flex flex-col justify-end p-4">
-                  <span className="text-[9px] bg-[#ff6b2b]/20 text-[#ff8c50] border border-[#ff6b2b]/30 px-2 py-0.5 rounded-md self-start mb-1.5 font-bold uppercase tracking-wider">Featured Hero</span>
-                  <span className="text-xs sm:text-sm text-white font-black tracking-wide uppercase">Stylized Anime</span>
-                </div>
-              </div>
-
-              {/* Card 3: Afrofuturism */}
-              <div className="relative aspect-[3/4] rounded-2xl overflow-hidden border border-white/5 opacity-55 hover:opacity-90 hover:scale-[1.02] transition-all duration-500 shadow-xl group">
-                <Image
-                  src="/preview-afro.png"
-                  alt="Afrofuturism preview"
-                  fill
-                  sizes="(max-width: 768px) 33vw, 20vw"
-                  className="object-cover transition-transform duration-700 group-hover:scale-105"
-                  priority
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-3">
-                  <span className="text-[10px] sm:text-xs text-white/50 font-bold uppercase tracking-wider">Afrofuturism</span>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        )}
-
-        {/* Step: Confirm Payment */}
-        {step === 'pay' && (
-          <div className="w-full max-w-md mx-auto my-8 relative z-10">
-            <div className="glass-panel rounded-3xl p-8 text-center space-y-6 relative overflow-hidden shadow-[0_0_50px_rgba(255,107,43,0.12)]">
-              {/* Orange top accent bar */}
-              <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-[#ff6b2b] to-[#7c3aed]" />
-
-              <div className="w-16 h-16 rounded-full bg-[#ff6b2b]/10 border border-[#ff6b2b]/20 flex items-center justify-center mx-auto shadow-[0_0_20px_rgba(255,107,43,0.15)] animate-pulse">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-8 h-8 text-[#ff6b2b]">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
-                </svg>
-              </div>
-
-              <div>
-                <h2 className="text-2xl font-extrabold mb-1">Confirm Payment</h2>
-                <p className="text-white/40 text-sm">
-                  {walletAddress ? 'Secure transaction on Celo Network' : 'Demo Mode — Connect wallet for real transaction'}
-                </p>
-              </div>
-
-              <div className="bg-black/35 rounded-2xl p-5 text-left space-y-3.5 border border-white/5 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-white/45">Prompt</span>
-                  <span className="text-white/85 text-right max-w-[60%] truncate font-medium">{prompt}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-white/45">Style Style</span>
-                  <span className="text-white/85 font-medium">{selectedStyle.label}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-white/45">Network/Payment</span>
-                  <span className="text-white/85 font-medium">{walletAddress ? 'CELO on Celo' : 'Simulation Mode'}</span>
-                </div>
-                <div className="h-px bg-white/10" />
-                <div className="flex justify-between items-baseline">
-                  <span className="text-white/45 font-semibold">Total Price</span>
-                  <span className="text-2xl font-black text-[#ff6b2b]">{PRICE_CELO} CELO</span>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <button
-                  onClick={handlePayAndGenerate}
-                  disabled={loading}
-                  className="w-full bg-[#ff6b2b] hover:bg-[#ff8c50] disabled:opacity-50 text-white font-bold py-4 rounded-2xl transition-all duration-300 shadow-[0_0_20px_rgba(255,107,43,0.2)] hover:shadow-[0_0_25px_rgba(255,107,43,0.3)]"
-                >
-                  {loading ? (
-                    <span className="flex items-center justify-center gap-2.5">
-                      <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block" />
-                      Paying & Generating...
-                    </span>
-                  ) : (
-                    `Pay ${PRICE_CELO} CELO & Generate`
-                  )}
-                </button>
-                <button
-                  onClick={() => setStep('input')}
-                  disabled={loading}
-                  className="w-full text-white/30 hover:text-white/60 text-xs py-2 transition-colors font-medium uppercase tracking-wider"
-                >
-                  ← Modify Prompt
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Step: Generation Results */}
-        {step === 'result' && imageUrl && (
-          <div className="w-full max-w-xl mx-auto my-4 relative z-10 space-y-6">
-            <div className="relative rounded-3xl overflow-hidden border border-[#ff6b2b]/20 shadow-[0_0_40px_rgba(255,107,43,0.15)] bg-white/5 backdrop-blur-md">
-              <div className="aspect-square relative w-full">
-                <Image
-                  src={imageUrl}
-                  alt={prompt}
-                  fill
-                  sizes="(max-width: 768px) 100vw, 40vw"
-                  className="object-cover"
-                />
-              </div>
-              <div className="bg-black/40 border-t border-white/5 p-5 backdrop-blur-md">
-                <div className="text-[10px] font-bold text-[#ff6b2b] tracking-wider uppercase mb-1">Generated Prompt</div>
-                <p className="text-white/80 text-sm font-medium">{prompt}</p>
-                <div className="text-[10px] text-white/30 mt-1">Style: {selectedStyle.label}</div>
-              </div>
-            </div>
-
-            {txHash && !txHash.startsWith('simulated') && (
-              <a
-                href={`https://celoscan.io/tx/${txHash}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 text-xs text-green-400 bg-green-400/5 border border-green-500/20 rounded-xl px-4 py-3 hover:bg-green-400/10 transition-all duration-300 font-semibold"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                </svg>
-                Payment Confirmed on Celo · View Explorer ↗
-              </a>
-            )}
-
-            <div className="flex gap-4">
-              <button
-                onClick={handleSaveImage}
-                className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-semibold py-4 rounded-2xl text-center transition-all duration-300 text-sm active:scale-95"
-              >
-                ⬇ Save Image
-              </button>
-              <button
-                onClick={handleReset}
-                className="flex-1 bg-[#ff6b2b] hover:bg-[#ff8c50] text-white font-black py-4 rounded-2xl transition-all duration-300 text-sm shadow-[0_0_20px_rgba(255,107,43,0.2)] active:scale-95"
-              >
-                ✨ Generate Another
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Pricing Section */}
-        <div id="pricing-section" className="w-full max-w-4xl mx-auto mt-24 mb-16 relative z-10">
-          <div className="glass-panel rounded-3xl p-8 sm:p-12 relative overflow-hidden shadow-[0_0_50px_rgba(255,107,43,0.05)] border border-[#ff6b2b]/10">
-            {/* Background absolute glow blobs */}
-            <div className="absolute top-[-50%] right-[-20%] w-[300px] h-[300px] rounded-full bg-[#ff6b2b] opacity-[0.05] blur-[80px]" />
-            <div className="absolute bottom-[-50%] left-[-20%] w-[300px] h-[300px] rounded-full bg-[#7c3aed] opacity-[0.05] blur-[80px]" />
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-              <div>
-                <span className="text-[10px] bg-[#ff6b2b]/15 text-[#ff8c50] border border-[#ff6b2b]/25 px-3 py-1 rounded-full font-bold uppercase tracking-wider">
-                  Transparent Pricing
+        {/* Bento Grid Application Workspace */}
+        <section className="w-full flex-1 flex items-center justify-center">
+          <BentoGrid className="items-stretch">
+            {/* Dynamic Console Card */}
+            <BentoCard
+              glow={step === 'pay' ? 'orange' : step === 'result' ? 'cyan' : 'none'}
+              title={step === 'input' ? 'Design Console' : step === 'pay' ? 'Billing Hub' : 'Artwork View'}
+              subtitle={step === 'input' ? 'WORKSPACE V1.0' : step === 'pay' ? 'ON-CHAIN AUTH' : 'SCAN COMPLETED'}
+              colSpan="md:col-span-8"
+              headerRight={
+                <span className="text-[9px] bg-card-bg text-text-muted border border-card-border px-2 py-0.5 rounded font-mono font-bold">
+                  STEP {step === 'input' ? '01' : step === 'pay' ? '02' : '03'} / 03
                 </span>
-                <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight mt-4 mb-4">
-                  Pay Only For <br />
-                  What You Create
-                </h2>
-                <p className="text-white/50 text-sm sm:text-base leading-relaxed">
-                  No monthly subscriptions, hidden fees, or token packages. Connect your Web3 wallet and pay directly onchain for each generation.
-                </p>
-              </div>
-
-              <div className="bg-black/45 border border-white/5 rounded-2xl p-6 sm:p-8 text-center space-y-4 shadow-xl">
-                <div className="text-xs text-white/40 font-bold uppercase tracking-wider">Single Image Generation</div>
-                <div className="text-5xl font-black text-[#ff6b2b] tracking-tight">
-                  {PRICE_CELO} <span className="text-lg text-white/80 font-bold">CELO</span>
+              }
+            >
+              {step === 'input' && (
+                <div className="space-y-6 py-2">
+                  <StyleSelector
+                    styles={STYLES}
+                    selectedStyle={selectedStyle}
+                    onStyleChange={setSelectedStyle}
+                  />
+                  <PromptInput
+                    prompt={prompt}
+                    setPrompt={setPrompt}
+                    onSubmit={handleGenerate}
+                    error={error}
+                    walletAddress={walletAddress}
+                  />
                 </div>
-                <div className="text-xs text-white/30">≈ $0.001 USD per generation</div>
-                <div className="h-px bg-white/10 my-4" />
-                <ul className="text-left text-xs sm:text-sm text-white/60 space-y-2 max-w-[200px] mx-auto">
+              )}
+
+              {step === 'pay' && (
+                <PaymentPanel
+                  prompt={prompt}
+                  selectedStyle={selectedStyle}
+                  walletAddress={walletAddress}
+                  priceCelo={PRICE_CELO}
+                  loading={loading}
+                  onPay={handlePayAndGenerate}
+                  onCancel={() => setStep('input')}
+                />
+              )}
+
+              {step === 'result' && imageUrl && (
+                <ResultPanel
+                  imageUrl={imageUrl}
+                  prompt={prompt}
+                  selectedStyle={selectedStyle}
+                  txHash={txHash}
+                  onSave={handleSaveImage}
+                  onReset={handleReset}
+                />
+              )}
+            </BentoCard>
+
+            {/* Gallery Preview Deck Card */}
+            <BentoCard
+              title="Reference Gallery"
+              subtitle="STABILITY SDXL SAMPLES"
+              colSpan="md:col-span-4"
+              className="flex flex-col justify-center min-h-[300px] md:min-h-0"
+            >
+              <PreviewDeck />
+            </BentoCard>
+
+            {/* Pricing Specifications Card */}
+            <BentoCard
+              title="Pricing Specifications"
+              subtitle="PAY-PER-GENERATION"
+              colSpan="md:col-span-4"
+              glow="orange"
+            >
+              <div className="py-6 space-y-4 text-center md:text-left">
+                <div className="space-y-1">
+                  <div className="font-mono text-4xl font-black text-cyber-orange tracking-tight">
+                    {PRICE_CELO} <span className="text-sm text-text-secondary font-sans font-bold">CELO</span>
+                  </div>
+                  <div className="text-[10px] text-text-dim tracking-wide font-semibold">
+                    ≈ $0.001 USD PER CALL (NO GAS MARKUP)
+                  </div>
+                </div>
+
+                <div className="h-px bg-card-border w-full" />
+
+                <ul className="text-left space-y-2.5 text-xs text-text-muted font-semibold max-w-[220px] mx-auto md:mx-0">
                   <li className="flex items-center gap-2">
-                    <span className="text-[#ff6b2b]">✓</span> Fast GPU generation
+                    <span className="text-cyber-orange">✓</span> Parallel GPU generation
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="text-[#ff6b2b]">✓</span> Ultra-high resolution (8K)
+                    <span className="text-cyber-orange">✓</span> Full SDXL high-res outputs
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="text-[#ff6b2b]">✓</span> Stability AI Model
+                    <span className="text-cyber-orange">✓</span> Direct wallet-to-contract billing
                   </li>
                 </ul>
               </div>
-            </div>
-          </div>
-        </div>
+            </BentoCard>
 
+            {/* Smart Contract Specs Card */}
+            <BentoCard
+              title="Node System Ledger"
+              subtitle="ON-CHAIN ATTRIBUTES"
+              colSpan="md:col-span-8"
+              className="flex flex-col justify-between"
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 py-3">
+                <div className="space-y-1">
+                  <div className="text-[10px] font-bold text-text-muted uppercase tracking-wide">
+                    Ledger Address
+                  </div>
+                  <div className="font-mono text-xs text-text-secondary font-bold select-all bg-card-bg border border-card-border rounded-xl p-3 flex items-center justify-between">
+                    <span className="truncate max-w-[85%]">{FLASHART_CONTRACT}</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3.5 h-3.5 text-text-dim hover:text-text-primary transition-colors cursor-pointer">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H5.25m11.9-3.664A2.251 2.251 0 0 0 15 2.25h-3a1.125 1.125 0 0 0-1.125 1.125v1.25m9 0.664a2.25 2.25 0 0 1-2.25 2.25h-1.5m2.25-2.25V6.75A2.25 2.25 0 0 1 18 9v.75m-6.75-6h2.25m-9 13.5h.008v.008H3.75v-.008Zm0-3h.008v.008H3.75v-.008Zm0-3h.008v.008H3.75v-.008Z" />
+                    </svg>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="text-[10px] font-bold text-text-muted uppercase tracking-wide">
+                    Smart Contract Interface
+                  </div>
+                  <div className="font-mono text-xs text-text-secondary font-bold bg-card-bg border border-card-border rounded-xl p-3 flex items-center justify-between">
+                    <span>payForImage(string prompt)</span>
+                    <span className="text-[9px] bg-cyber-cyan/15 text-cyber-cyan border border-cyber-cyan/20 px-1.5 py-0.5 rounded font-mono font-bold uppercase">
+                      payable
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="h-px bg-card-border my-2 w-full" />
+
+              <div className="flex flex-wrap gap-x-6 gap-y-2 items-center opacity-35 select-none text-[9px] font-bold tracking-[0.2em] uppercase text-text-secondary">
+                <span>Celo Ecosystem</span>
+                <span>•</span>
+                <span>MiniPay Verified</span>
+                <span>•</span>
+                <span>Opera Browser Ready</span>
+                <span>•</span>
+                <span>Valora Compliant</span>
+              </div>
+            </BentoCard>
+          </BentoGrid>
+        </section>
+
+        {/* Footer */}
+        <footer className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-card-border pt-6 text-[10px] text-text-muted font-bold tracking-wider uppercase">
+          <div>
+            Built on Celo Network · Proof of Ship 2025
+          </div>
+          <div>
+            FlashArt © 2026
+          </div>
+        </footer>
       </div>
-
-      {/* Footer / Partner Logos */}
-      <footer className="relative z-20 w-full border-t border-white/5 py-10 mt-16 bg-[#07070a]/50 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col gap-6 md:flex-row md:items-center md:justify-between text-center md:text-left">
-          
-          {/* Partner row (Vibe-style logos) */}
-          <div className="flex flex-wrap justify-center md:justify-start items-center gap-x-12 gap-y-4 opacity-25 select-none">
-            <span className="text-xs font-black tracking-[0.2em] uppercase text-white hover:opacity-100 transition-opacity">Celo</span>
-            <span className="text-xs font-black tracking-[0.2em] uppercase text-white hover:opacity-100 transition-opacity">MiniPay</span>
-            <span className="text-xs font-black tracking-[0.2em] uppercase text-white hover:opacity-100 transition-opacity">Opera</span>
-            <span className="text-xs font-black tracking-[0.2em] uppercase text-white hover:opacity-100 transition-opacity">Valora</span>
-          </div>
-
-          <p className="text-white/20 text-xs tracking-wider">
-            FlashArt · Proof of Ship 2025 · Built on Celo
-          </p>
-        </div>
-      </footer>
     </main>
   );
 }
