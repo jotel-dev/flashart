@@ -1,8 +1,9 @@
- import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { sendAgentReceipt } from '../../../lib/agent';
 
 export async function POST(req: NextRequest) {
   try {
-    const { prompt } = await req.json();
+    const { prompt, userAddress } = await req.json();
 
     if (!prompt) {
       return NextResponse.json({ error: 'Prompt is required' }, { status: 400 });
@@ -53,7 +54,14 @@ export async function POST(req: NextRequest) {
     }
 
     const imageUrl = `data:image/png;base64,${base64Image}`;
-    return NextResponse.json({ imageUrl });
+
+    // Broadcast the AI Agent's on-chain delivery receipt
+    let agentTxHash = null;
+    if (userAddress) {
+      agentTxHash = await sendAgentReceipt(userAddress, prompt, imageUrl);
+    }
+
+    return NextResponse.json({ imageUrl, agentTxHash });
   } catch (error) {
     console.error('Generate error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

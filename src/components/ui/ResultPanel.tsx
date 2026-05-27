@@ -7,6 +7,7 @@ interface ResultPanelProps {
   prompt: string;
   selectedStyle: StyleType;
   txHash: string | null;
+  agentTxHash: string | null;
   onSave: () => void;
   onReset: () => void;
 }
@@ -16,6 +17,7 @@ export default function ResultPanel({
   prompt,
   selectedStyle,
   txHash,
+  agentTxHash,
   onSave,
   onReset,
 }: ResultPanelProps) {
@@ -69,7 +71,7 @@ export default function ResultPanel({
         </div>
       </div>
 
-      {/* Explorer Verification Link */}
+      {/* Explorer Verification Link (User Payment) */}
       {txHash && !isSimulated && (
         <a
           href={`https://celoscan.io/tx/${txHash}`}
@@ -81,8 +83,49 @@ export default function ResultPanel({
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
           </span>
-          VERIFIED ON CELOSCAN EXPLORER ↗
+          VERIFIED USER PAYMENT ON CELOSCAN ↗
         </a>
+      )}
+
+      {/* AI Agent on-chain delivery receipt (ERC-8004 Agent Transaction) */}
+      {agentTxHash && (
+        <div className="bg-card-bg border border-card-border rounded-2xl p-5 space-y-3 transition-premium">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyber-orange opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-cyber-orange"></span>
+              </span>
+              <span className="font-space text-[9px] text-cyber-orange font-bold tracking-widest uppercase">
+                AGENT DELIVERY LEDGER
+              </span>
+            </div>
+            <span className="text-[8px] bg-cyber-orange/10 text-cyber-orange border border-cyber-orange/20 px-1.5 py-0.5 rounded font-mono font-bold uppercase">
+              ERC-8004
+            </span>
+          </div>
+
+          <div className="text-[10px] text-text-muted font-semibold leading-normal">
+            This asset was autonomously logged and dispatched on-chain by the verified human-backed AI Agent.
+          </div>
+
+          <div className="h-px bg-card-border" />
+
+          {agentTxHash.startsWith('simulated') ? (
+            <div className="text-[10px] font-mono text-text-dim text-center">
+              Simulation Hash: {agentTxHash}
+            </div>
+          ) : (
+            <a
+              href={`https://celoscan.io/tx/${agentTxHash}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-1.5 text-xs text-cyber-orange hover:text-cyber-orange/80 transition-colors font-semibold"
+            >
+              Verify Agent Dispatch ↗
+            </a>
+          )}
+        </div>
       )}
 
       {/* Control Buttons */}

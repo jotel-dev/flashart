@@ -48,6 +48,7 @@ export default function Home() {
   const [isMiniPay, setIsMiniPay] = useState(false);
   const [txHash, setTxHash] = useState<string | null>(null);
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [agentTxHash, setAgentTxHash] = useState<string | null>(null);
 
   useEffect(() => {
     // Theme setup
@@ -159,13 +160,18 @@ export default function Home() {
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: fullPrompt, txHash: paymentTxHash }),
+        body: JSON.stringify({ 
+          prompt: fullPrompt, 
+          txHash: paymentTxHash,
+          userAddress: walletAddress
+        }),
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Generation failed');
 
       setImageUrl(data.imageUrl);
+      setAgentTxHash(data.agentTxHash);
       setStep('result');
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
@@ -190,6 +196,7 @@ export default function Home() {
     setImageUrl(null);
     setError(null);
     setTxHash(null);
+    setAgentTxHash(null);
     setStep('input');
   };
 
@@ -295,6 +302,7 @@ export default function Home() {
                   prompt={prompt}
                   selectedStyle={selectedStyle}
                   txHash={txHash}
+                  agentTxHash={agentTxHash}
                   onSave={handleSaveImage}
                   onReset={handleReset}
                 />
