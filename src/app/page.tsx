@@ -14,26 +14,23 @@ const STYLES = [
   { id: 'afrofuturism', label: '🌍 Afrofuturism', suffix: 'afrofuturism art, rich african culture, futuristic technology, vibrant colors, cosmic background, powerful black figures, detailed illustration' },
 ];
 
-const PRICE_CUSD = '0.05';
-const TREASURY_ADDRESS = '0xfD40e6D6cd174AeE645D65dfC9F4A3061d2a78a7' as `0x${string}`;
-const CUSD_CONTRACT = '0x765DE816845861e75A25fCA122bb6898B8B1282a' as `0x${string}`;
-
-const CUSD_ABI = [
+const PRICE_CELO = '0.001';
+const FLASHART_CONTRACT = '0xBa3D984C36c5a34d37897f7d3CD4c6E5BB6CF568' as `0x${string}`;
+const FLASHART_ABI = [
   {
-    name: 'transfer',
+    name: 'payForImage',
     type: 'function',
-    stateMutability: 'nonpayable',
+    stateMutability: 'payable',
     inputs: [
-      { name: 'recipient', type: 'address' },
-      { name: 'amount', type: 'uint256' },
+      { name: 'prompt', type: 'string' },
     ],
-    outputs: [{ name: '', type: 'bool' }],
+    outputs: [],
   },
 ] as const;
 
 export default function Home() {
   const [prompt, setPrompt] = useState('');
-  const [selectedStyle, setSelectedStyle] = useState(STYLES[0]);
+  const [selectedStyle, setSelectedStyle] = useState(STYLES[1]); // Anime default
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -70,12 +67,20 @@ export default function Home() {
         return;
       }
       const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
-      if (accounts?.[0]) setWalletAddress(accounts[0]);
+      if (accounts?.[0]) {
+        setWalletAddress(accounts[0]);
+        setError(null);
+      }
     } catch (err: any) {
       if (err?.code === 4001) setError('Connection rejected. Please approve in your wallet.');
       else if (err?.code === -32002) setError('Request pending. Please open your wallet to approve.');
       else setError(err?.message || 'Failed to connect wallet');
     }
+  };
+
+  const disconnectWallet = () => {
+    setWalletAddress(null);
+    setError(null);
   };
 
   const handleGenerate = () => {
@@ -98,10 +103,11 @@ export default function Home() {
         const publicClient = createPublicClient({ chain: celo, transport: http() });
 
         const hash = await walletClient.writeContract({
-          address: CUSD_CONTRACT,
-          abi: CUSD_ABI,
-          functionName: 'transfer',
-          args: [TREASURY_ADDRESS, parseEther(PRICE_CUSD)],
+          address: FLASHART_CONTRACT,
+          abi: FLASHART_ABI,
+          functionName: 'payForImage',
+          args: [prompt],
+          value: parseEther(PRICE_CELO),
           account: walletAddress as `0x${string}`,
         });
 
@@ -149,126 +155,238 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-[#0a0a0f] text-white overflow-x-hidden">
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full bg-[#ff6b2b] opacity-[0.07] blur-[120px]" />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full bg-[#7c3aed] opacity-[0.08] blur-[100px]" />
+    <main className="min-h-screen bg-[#0a0a0f] text-white relative font-space flex flex-col justify-between">
+      {/* Background ambient glows */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-[#ff6b2b] opacity-[0.04] blur-[150px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-[#7c3aed] opacity-[0.05] blur-[150px]" />
+        <div className="absolute top-[40%] left-[50%] -translate-x-[50%] -translate-y-[50%] w-[80vw] h-[50vh] rounded-full bg-gradient-to-tr from-[#ff6b2b]/5 to-[#7c3aed]/5 opacity-60 blur-[130px]" />
       </div>
 
-      <div className="relative z-10 max-w-2xl mx-auto px-4 py-12">
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-1.5 text-xs text-white/50 mb-6">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#ff6b2b] animate-pulse inline-block" />
-            {isMiniPay ? '🟢 MiniPay Connected' : 'Powered by Celo'} · Pay {PRICE_CUSD} cUSD per image
+      {/* Header Navigation */}
+      <header className="relative z-20 max-w-7xl mx-auto w-full px-6 py-6 flex items-center justify-between">
+        <div className="flex items-center gap-2 select-none">
+          <div className="w-8 h-8 rounded-lg bg-[#ff6b2b] flex items-center justify-center shadow-[0_0_15px_rgba(255,107,43,0.4)]">
+            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+            </svg>
           </div>
-          <h1 className="text-5xl font-black tracking-tight mb-3">
+          <span className="text-xl font-bold tracking-tight">
             Flash<span className="text-[#ff6b2b]">Art</span>
-          </h1>
-          <p className="text-white/40 text-base">
-            AI image generation. No subscription. Just pay per image.
-          </p>
-
-          {walletAddress ? (
-            <div className="mt-4 inline-flex items-center gap-2 bg-green-500/10 border border-green-500/20 rounded-full px-3 py-1 text-xs text-green-400">
-              ✓ {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
-            </div>
-          ) : (
-            <div className="mt-4 space-y-2">
-              <button
-                onClick={connectWallet}
-                className="inline-flex items-center gap-2 bg-[#ff6b2b] hover:bg-[#ff8c50] text-white font-bold py-2.5 px-6 rounded-xl transition-all text-sm"
-              >
-                Connect Wallet
-              </button>
-              {error && (
-                <p className="text-red-400/80 text-xs text-center">{error}</p>
-              )}
-              <p className="text-white/30 text-xs text-center">
-                📱 On mobile? Open in <a href="https://minipay.opera.com" className="text-[#ff6b2b]">MiniPay</a> for best experience
-              </p>
-            </div>
-          )}
+          </span>
         </div>
 
-        {step === 'input' && (
-          <div className="space-y-6">
-            <div>
-              <label className="block text-xs text-white/40 uppercase tracking-widest mb-2">
-                Describe your image
-              </label>
-              <textarea
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                placeholder="e.g. A Lagos market at sunset with vibrant colors and people selling goods..."
-                rows={4}
-                className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-white placeholder-white/20 text-sm resize-none focus:outline-none focus:border-[#ff6b2b]/50 transition-colors"
-              />
-            </div>
+        <nav className="hidden md:flex items-center gap-8 text-sm text-white/50 font-medium">
+          <span className="text-white border-b-2 border-[#ff6b2b] pb-1 cursor-pointer">Generator</span>
+          <span className="hover:text-white transition-colors cursor-pointer">Styles</span>
+          <span className="hover:text-white transition-colors cursor-pointer">Pricing</span>
+        </nav>
 
-            <div>
-              <label className="block text-xs text-white/40 uppercase tracking-widest mb-3">
-                Choose style
-              </label>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                {STYLES.map((style) => (
-                  <button
-                    key={style.id}
-                    onClick={() => setSelectedStyle(style)}
-                    className={`px-3 py-2.5 rounded-xl text-sm font-medium border transition-all text-left ${selectedStyle.id === style.id
-                      ? 'bg-[#ff6b2b]/20 border-[#ff6b2b] text-white'
-                      : 'bg-white/5 border-white/10 text-white/50 hover:border-white/30'
-                      }`}
-                  >
-                    {style.label}
-                  </button>
-                ))}
+        <div>
+          {walletAddress ? (
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={disconnectWallet}
+                className="hidden sm:inline-flex text-xs text-white/40 hover:text-white/80 transition-colors"
+              >
+                Disconnect
+              </button>
+              <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white/90 shadow-[0_0_15px_rgba(255,255,255,0.02)]">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                <span>{walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}</span>
               </div>
             </div>
+          ) : (
+            <button
+              onClick={connectWallet}
+              className="inline-flex items-center gap-2 bg-[#ff6b2b] hover:bg-[#ff8c50] text-white font-bold py-2 px-5 rounded-xl transition-all duration-300 text-sm shadow-[0_0_20px_rgba(255,107,43,0.2)] hover:shadow-[0_0_25px_rgba(255,107,43,0.35)] hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a2.25 2.25 0 0 0-2.25-2.25H15a3 3 0 1 1-6 0H5.25A2.25 2.25 0 0 0 3 12m18 0v6a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 18v-6m18 0V9M3 12V9m18-3a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 6" />
+              </svg>
+              Connect Wallet
+            </button>
+          )}
+        </div>
+      </header>
 
+      {/* Main Content Area */}
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center w-full max-w-7xl mx-auto px-6 py-6">
+        
+        {/* Hero Section */}
+        <div className="text-center max-w-3xl mx-auto mb-10">
+          <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-1.5 text-xs text-white/50 mb-6 backdrop-blur-md">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#ff6b2b] animate-pulse inline-block" />
+            {isMiniPay ? '🟢 MiniPay Connected' : 'Celo Network'} · Pay {PRICE_CELO} CELO per image
+          </div>
+          <h1 className="text-4xl sm:text-6xl font-black tracking-tight leading-[1.1] mb-6">
+            Create <span className="text-gradient-orange">Stunning Art</span> <br />
+            from Text
+          </h1>
+          <p className="text-white/45 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
+            Turn your ideas into digital artwork. Paid with CELO on Celo. No monthly subscription. Pay only for what you generate.
+          </p>
+        </div>
+
+        {/* Input Bar */}
+        {step === 'input' && (
+          <div className="w-full max-w-2xl mx-auto mb-16">
+            <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-full p-2 pl-5 focus-within:border-[#ff6b2b]/40 focus-within:shadow-[0_0_30px_rgba(255,107,43,0.12)] transition-all duration-300 backdrop-blur-md">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" className="w-5 h-5 text-white/30">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 21l-.813-5.096L3 15l5.096-.813L9 9l.813 5.096L15 15l-5.187.904ZM18 7.5l-.375 2.25L15.375 10l2.25.375L18 12.75l.375-2.25L20.625 10l-2.25-.375L18 7.5ZM20.25 3.375l-.188 1.125-1.125.188 1.125.188.188 1.125.188-1.125 1.125-.188-1.125-.188-.188-1.125Z" />
+              </svg>
+              <input
+                type="text"
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && prompt.trim()) {
+                    handleGenerate();
+                  }
+                }}
+                placeholder="A modern anime office workspace, natural light..."
+                className="flex-1 bg-transparent border-none text-white placeholder-white/20 text-sm sm:text-base focus:outline-none py-2"
+              />
+              <button
+                onClick={handleGenerate}
+                disabled={!prompt.trim()}
+                className="w-10 h-10 rounded-full bg-[#ff6b2b] hover:bg-[#ff8c50] disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-all duration-300 shadow-[0_0_15px_rgba(255,107,43,0.3)] hover:scale-105 active:scale-95"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5 text-white">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 10.5 12 3m0 0 7.5 7.5M12 3v18" />
+                </svg>
+              </button>
+            </div>
             {error && (
-              <p className="text-red-400 text-sm bg-red-400/10 border border-red-400/20 rounded-xl px-4 py-3">
-                {error}
+              <p className="text-red-400/80 text-xs text-center mt-3 bg-red-500/10 border border-red-500/20 rounded-xl py-2 px-4 inline-block mx-auto">{error}</p>
+            )}
+            {!walletAddress && (
+              <p className="text-white/20 text-xs text-center mt-3">
+                📱 On mobile? Open in <a href="https://minipay.opera.com" className="text-[#ff6b2b] underline">MiniPay</a> for the best experience
               </p>
             )}
-
-            <button
-              onClick={handleGenerate}
-              disabled={!prompt.trim()}
-              className="w-full bg-[#ff6b2b] hover:bg-[#ff8c50] disabled:opacity-30 disabled:cursor-not-allowed text-white font-bold py-4 rounded-2xl transition-all text-base"
-            >
-              Generate Image →
-            </button>
           </div>
         )}
 
+        {/* Styles & Previews Deck */}
+        {step === 'input' && (
+          <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center mt-4">
+            
+            {/* Left Overlay style selection */}
+            <div className="lg:col-span-4 glass-panel rounded-2xl p-2.5 space-y-1 relative z-10">
+              <div className="px-3 py-2 text-[10px] font-bold text-white/30 tracking-widest uppercase mb-1">
+                Choose Art Style
+              </div>
+              <div className="grid grid-cols-2 lg:grid-cols-1 gap-1">
+                {STYLES.map((style) => {
+                  const isActive = selectedStyle.id === style.id;
+                  return (
+                    <button
+                      key={style.id}
+                      onClick={() => setSelectedStyle(style)}
+                      className={`px-4 py-3 rounded-xl text-xs sm:text-sm font-medium transition-all text-left flex items-center justify-between ${
+                        isActive
+                          ? 'bg-[#ff6b2b]/10 text-white border border-[#ff6b2b]/30 shadow-[0_0_15px_rgba(255,107,43,0.1)]'
+                          : 'text-white/40 border border-transparent hover:text-white/80 hover:bg-white/5'
+                      }`}
+                    >
+                      <span>{style.label.split(' ')[1]}</span>
+                      {isActive && <span className="w-1.5 h-1.5 rounded-full bg-[#ff6b2b]" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Right 3 Preview Cards Deck */}
+            <div className="lg:col-span-8 grid grid-cols-3 gap-4 items-center">
+              {/* Card 1: Photorealistic */}
+              <div className="relative aspect-[3/4] rounded-2xl overflow-hidden border border-white/5 opacity-55 hover:opacity-90 hover:scale-[1.02] transition-all duration-500 shadow-xl group">
+                <Image
+                  src="/preview-photo.png"
+                  alt="Photorealistic preview"
+                  fill
+                  sizes="(max-width: 768px) 33vw, 20vw"
+                  className="object-cover transition-transform duration-700 group-hover:scale-105"
+                  priority
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-3">
+                  <span className="text-[10px] sm:text-xs text-white/50 font-bold uppercase tracking-wider">Photorealistic</span>
+                </div>
+              </div>
+
+              {/* Card 2: Anime Hero Image (Featured Center) */}
+              <div className="relative aspect-[3/4] rounded-2xl overflow-hidden border border-[#ff6b2b]/30 shadow-[0_0_35px_rgba(255,107,43,0.18)] scale-[1.06] hover:scale-[1.09] transition-all duration-500 z-10 group">
+                <Image
+                  src="/hero-anime.png"
+                  alt="Anime Hero character"
+                  fill
+                  sizes="(max-width: 768px) 33vw, 25vw"
+                  className="object-cover transition-transform duration-700 group-hover:scale-105"
+                  priority
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/10 to-transparent flex flex-col justify-end p-4">
+                  <span className="text-[9px] bg-[#ff6b2b]/20 text-[#ff8c50] border border-[#ff6b2b]/30 px-2 py-0.5 rounded-md self-start mb-1.5 font-bold uppercase tracking-wider">Featured Hero</span>
+                  <span className="text-xs sm:text-sm text-white font-black tracking-wide uppercase">Stylized Anime</span>
+                </div>
+              </div>
+
+              {/* Card 3: Afrofuturism */}
+              <div className="relative aspect-[3/4] rounded-2xl overflow-hidden border border-white/5 opacity-55 hover:opacity-90 hover:scale-[1.02] transition-all duration-500 shadow-xl group">
+                <Image
+                  src="/preview-afro.png"
+                  alt="Afrofuturism preview"
+                  fill
+                  sizes="(max-width: 768px) 33vw, 20vw"
+                  className="object-cover transition-transform duration-700 group-hover:scale-105"
+                  priority
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-3">
+                  <span className="text-[10px] sm:text-xs text-white/50 font-bold uppercase tracking-wider">Afrofuturism</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        )}
+
+        {/* Step: Confirm Payment */}
         {step === 'pay' && (
-          <div>
-            <div className="bg-white/5 border border-white/10 rounded-3xl p-8 text-center space-y-6">
-              <div className="text-5xl">⚡</div>
+          <div className="w-full max-w-md mx-auto my-8 relative z-10">
+            <div className="glass-panel rounded-3xl p-8 text-center space-y-6 relative overflow-hidden shadow-[0_0_50px_rgba(255,107,43,0.12)]">
+              {/* Orange top accent bar */}
+              <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-[#ff6b2b] to-[#7c3aed]" />
+
+              <div className="w-16 h-16 rounded-full bg-[#ff6b2b]/10 border border-[#ff6b2b]/20 flex items-center justify-center mx-auto shadow-[0_0_20px_rgba(255,107,43,0.15)] animate-pulse">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-8 h-8 text-[#ff6b2b]">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                </svg>
+              </div>
+
               <div>
-                <h2 className="text-2xl font-bold mb-2">Confirm Payment</h2>
+                <h2 className="text-2xl font-extrabold mb-1">Confirm Payment</h2>
                 <p className="text-white/40 text-sm">
-                  {walletAddress ? 'Real cUSD payment on Celo' : 'Demo mode — connect wallet for real payment'}
+                  {walletAddress ? 'Secure transaction on Celo Network' : 'Demo Mode — Connect wallet for real transaction'}
                 </p>
               </div>
 
-              <div className="bg-black/30 rounded-2xl p-4 text-left space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-white/40">Prompt</span>
-                  <span className="text-white/80 text-right max-w-[60%] truncate">{prompt}</span>
+              <div className="bg-black/35 rounded-2xl p-5 text-left space-y-3.5 border border-white/5 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-white/45">Prompt</span>
+                  <span className="text-white/85 text-right max-w-[60%] truncate font-medium">{prompt}</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-white/40">Style</span>
-                  <span className="text-white/80">{selectedStyle.label}</span>
+                <div className="flex justify-between">
+                  <span className="text-white/45">Style Style</span>
+                  <span className="text-white/85 font-medium">{selectedStyle.label}</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-white/40">Payment</span>
-                  <span className="text-white/80">{walletAddress ? 'cUSD on Celo' : 'Demo mode'}</span>
+                <div className="flex justify-between">
+                  <span className="text-white/45">Network/Payment</span>
+                  <span className="text-white/85 font-medium">{walletAddress ? 'CELO on Celo' : 'Simulation Mode'}</span>
                 </div>
                 <div className="h-px bg-white/10" />
-                <div className="flex justify-between font-bold">
-                  <span>Total</span>
-                  <span className="text-[#ff6b2b]">{PRICE_CUSD} cUSD</span>
+                <div className="flex justify-between items-baseline">
+                  <span className="text-white/45 font-semibold">Total Price</span>
+                  <span className="text-2xl font-black text-[#ff6b2b]">{PRICE_CELO} CELO</span>
                 </div>
               </div>
 
@@ -276,40 +394,46 @@ export default function Home() {
                 <button
                   onClick={handlePayAndGenerate}
                   disabled={loading}
-                  className="w-full bg-[#ff6b2b] hover:bg-[#ff8c50] disabled:opacity-50 text-white font-bold py-4 rounded-2xl transition-all"
+                  className="w-full bg-[#ff6b2b] hover:bg-[#ff8c50] disabled:opacity-50 text-white font-bold py-4 rounded-2xl transition-all duration-300 shadow-[0_0_20px_rgba(255,107,43,0.2)] hover:shadow-[0_0_25px_rgba(255,107,43,0.3)]"
                 >
                   {loading ? (
-                    <span className="flex items-center justify-center gap-2">
+                    <span className="flex items-center justify-center gap-2.5">
                       <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block" />
-                      Processing payment...
+                      Paying & Generating...
                     </span>
                   ) : (
-                    `Pay ${PRICE_CUSD} cUSD & Generate`
+                    `Pay ${PRICE_CELO} CELO & Generate`
                   )}
                 </button>
                 <button
                   onClick={() => setStep('input')}
-                  className="w-full text-white/30 hover:text-white/60 text-sm py-2 transition-colors"
+                  disabled={loading}
+                  className="w-full text-white/30 hover:text-white/60 text-xs py-2 transition-colors font-medium uppercase tracking-wider"
                 >
-                  ← Go back
+                  ← Modify Prompt
                 </button>
               </div>
             </div>
           </div>
         )}
 
+        {/* Step: Generation Results */}
         {step === 'result' && imageUrl && (
-          <div className="space-y-6">
-            <div className="relative rounded-3xl overflow-hidden border border-white/10">
-              <Image
-                src={imageUrl}
-                alt={prompt}
-                width={1024}
-                height={1024}
-                className="w-full h-auto"
-              />
-              <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent p-4">
-                <p className="text-white/60 text-xs truncate">{prompt}</p>
+          <div className="w-full max-w-xl mx-auto my-4 relative z-10 space-y-6">
+            <div className="relative rounded-3xl overflow-hidden border border-[#ff6b2b]/20 shadow-[0_0_40px_rgba(255,107,43,0.15)] bg-white/5 backdrop-blur-md">
+              <div className="aspect-square relative w-full">
+                <Image
+                  src={imageUrl}
+                  alt={prompt}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 40vw"
+                  className="object-cover"
+                />
+              </div>
+              <div className="bg-black/40 border-t border-white/5 p-5 backdrop-blur-md">
+                <div className="text-[10px] font-bold text-[#ff6b2b] tracking-wider uppercase mb-1">Generated Prompt</div>
+                <p className="text-white/80 text-sm font-medium">{prompt}</p>
+                <div className="text-[10px] text-white/30 mt-1">Style: {selectedStyle.label}</div>
               </div>
             </div>
 
@@ -318,22 +442,25 @@ export default function Home() {
                 href={`https://celoscan.io/tx/${txHash}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 text-xs text-green-400 bg-green-400/10 border border-green-400/20 rounded-xl px-4 py-2"
+                className="flex items-center justify-center gap-2 text-xs text-green-400 bg-green-400/5 border border-green-500/20 rounded-xl px-4 py-3 hover:bg-green-400/10 transition-all duration-300 font-semibold"
               >
-                ✓ Payment confirmed onchain · View on Celoscan ↗
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+                Payment Confirmed on Celo · View Explorer ↗
               </a>
             )}
 
-            <div className="flex gap-3">
+            <div className="flex gap-4">
               <button
                 onClick={handleSaveImage}
-                className="flex-1 bg-white/10 hover:bg-white/20 text-white font-semibold py-3 rounded-2xl text-center transition-all text-sm"
+                className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-semibold py-4 rounded-2xl text-center transition-all duration-300 text-sm active:scale-95"
               >
                 ⬇ Save Image
               </button>
               <button
                 onClick={handleReset}
-                className="flex-1 bg-[#ff6b2b] hover:bg-[#ff8c50] text-white font-semibold py-3 rounded-2xl transition-all text-sm"
+                className="flex-1 bg-[#ff6b2b] hover:bg-[#ff8c50] text-white font-black py-4 rounded-2xl transition-all duration-300 text-sm shadow-[0_0_20px_rgba(255,107,43,0.2)] active:scale-95"
               >
                 ✨ Generate Another
               </button>
@@ -341,10 +468,25 @@ export default function Home() {
           </div>
         )}
 
-        <p className="text-center text-white/20 text-xs mt-12">
-          FlashArt · Built on Celo · Proof of Ship 2025
-        </p>
       </div>
+
+      {/* Footer / Partner Logos */}
+      <footer className="relative z-20 w-full border-t border-white/5 py-10 mt-16 bg-[#07070a]/50 backdrop-blur-md">
+        <div className="max-w-7xl mx-auto px-6 flex flex-col gap-6 md:flex-row md:items-center md:justify-between text-center md:text-left">
+          
+          {/* Partner row (Vibe-style logos) */}
+          <div className="flex flex-wrap justify-center md:justify-start items-center gap-x-12 gap-y-4 opacity-25 select-none">
+            <span className="text-xs font-black tracking-[0.2em] uppercase text-white hover:opacity-100 transition-opacity">Celo</span>
+            <span className="text-xs font-black tracking-[0.2em] uppercase text-white hover:opacity-100 transition-opacity">MiniPay</span>
+            <span className="text-xs font-black tracking-[0.2em] uppercase text-white hover:opacity-100 transition-opacity">Opera</span>
+            <span className="text-xs font-black tracking-[0.2em] uppercase text-white hover:opacity-100 transition-opacity">Valora</span>
+          </div>
+
+          <p className="text-white/20 text-xs tracking-wider">
+            FlashArt · Proof of Ship 2025 · Built on Celo
+          </p>
+        </div>
+      </footer>
     </main>
   );
 }
