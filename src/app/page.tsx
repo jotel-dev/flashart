@@ -207,10 +207,10 @@ return (
 
       <div className="relative z-10 w-full flex-1 flex flex-col justify-between gap-8 md:gap-10">
         {/* Navigation Bar */}
-        <header className="fixed top-0 left-0 right-0 z-30 flex items-center justify-between w-full px-4 py-3 sm:px-6 md:px-8 backdrop-blur-[12px] bg-[rgba(10,10,10,0.85)] border-b border-[#1E1E24] glass-panel">
+        <header className="fixed top-0 left-0 right-0 z-30 flex items-center justify-between w-full px-3 py-2 sm:px-6 sm:py-3 md:px-8 backdrop-blur-[12px] bg-[rgba(10,10,10,0.85)] border-b border-[#1E1E24] glass-panel">
           <div className="flex items-center gap-2 sm:gap-3 select-none">
             <div
-              className="relative h-12 w-12 sm:h-14 sm:w-14 text-text-primary transition-premium hover:scale-[1.02]"
+              className="relative h-10 w-10 sm:h-12 sm:w-12 md:h-14 md:w-14 text-text-primary transition-premium hover:scale-[1.02]"
               aria-label="FlashArt logo"
             >
               <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" className="h-full w-full">
@@ -233,7 +233,7 @@ return (
                 <path d="M75 25 L80 20 M75 20 L80 25" stroke="url(#logoGradient)" strokeWidth="2" strokeLinecap="round" />
               </svg>
             </div>
-            <h1 className="font-space text-xl sm:text-2xl font-semibold tracking-tight">
+            <h1 className="font-space text-lg sm:text-xl md:text-2xl font-semibold tracking-tight">
               <span className="text-gradient-violet">Flash</span><span className="text-gradient-orange">Art</span>
             </h1>
           </div>
