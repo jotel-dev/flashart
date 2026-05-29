@@ -32,7 +32,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${spaceGrotesk.variable} ${plusJakartaSans.variable}`}>
-      <body className="antialiased font-sans bg-[#030303] text-white selection:bg-[#ff6b2b]/30 selection:text-white">
+      <body className="antialiased font-sans text-text-primary selection:bg-[#7C6AF533] selection:text-text-primary">
         {children}
       </body>
     </html>

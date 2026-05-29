@@ -21,12 +21,12 @@ export default function PaymentPanel({
   onCancel,
 }: PaymentPanelProps) {
   return (
-    <div className="w-full max-w-md mx-auto relative overflow-hidden rounded-3xl border border-card-border bg-cyber-dark/60 backdrop-blur-md p-6 md:p-8 space-y-6 shadow-[0_20px_50px_rgba(0,0,0,0.15)] transition-premium">
+    <div className="w-full max-w-md mx-auto relative overflow-hidden border border-card-border bg-card-bg p-5 space-y-6 transition-premium glow-hover">
       {/* Visual top accent indicator */}
       <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-cyber-orange to-cyber-purple" />
 
       {/* Charging Icon */}
-      <div className="w-12 h-12 rounded-2xl bg-cyber-orange/10 border border-cyber-orange/20 flex items-center justify-center mx-auto shadow-[0_0_20px_rgba(255,94,0,0.1)] animate-pulse">
+      <div className="w-12 h-12 bg-[#2A1508] border border-[#F4722B40] flex items-center justify-center mx-auto animate-pulse">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
@@ -44,16 +44,16 @@ export default function PaymentPanel({
       </div>
 
       <div className="text-center space-y-1">
-        <h2 className="font-space text-base font-bold tracking-wider uppercase text-text-primary">
+        <h2 className="font-space text-base font-semibold tracking-[0.08em] uppercase text-text-primary">
           Authorize Payload
         </h2>
-        <p className="text-[9px] text-text-dim tracking-wider font-bold">
+        <p className="text-[11px] text-text-muted tracking-[0.08em] font-medium">
           {walletAddress ? 'SECURE TRANSACTION VIA CELO BLOCKCHAIN' : 'DEMO NODE — CONNECT WALLET FOR ON-CHAIN TRANSACTION'}
         </p>
       </div>
 
       {/* Details Table */}
-      <div className="bg-card-bg rounded-2xl border border-card-border p-5 space-y-4 text-xs">
+      <div className="bg-card-bg-hover border border-card-border p-5 space-y-4 text-xs">
         <div className="flex justify-between items-start gap-4">
           <span className="text-text-muted font-medium">Prompt Payload</span>
           <span className="text-text-primary text-right truncate max-w-[65%] font-semibold font-mono text-[11px]">
@@ -70,15 +70,15 @@ export default function PaymentPanel({
             {walletAddress ? 'CELO-MAINNET' : 'SIMULATOR-NODE'}
           </span>
         </div>
-        
+
         <div className="h-px bg-card-border" />
 
         <div className="flex justify-between items-baseline pt-1">
-          <span className="text-text-muted font-bold uppercase tracking-wider text-[9px]">
+          <span className="text-cyber-purple font-semibold uppercase tracking-[0.08em] text-[11px]">
             Generation Fee
           </span>
-          <span className="text-xl font-black text-cyber-orange font-mono">
-            {priceCelo} <span className="text-xs text-text-secondary font-bold font-sans">CELO</span>
+          <span className="text-xl font-semibold text-cyber-orange font-mono">
+            {priceCelo} <span className="text-xs text-text-secondary font-semibold font-sans">CELO</span>
           </span>
         </div>
       </div>
@@ -88,11 +88,11 @@ export default function PaymentPanel({
         <button
           onClick={onPay}
           disabled={loading}
-          className="relative w-full py-4 rounded-2xl bg-cyber-orange hover:bg-cyber-orange/90 text-white font-bold text-xs uppercase tracking-widest overflow-hidden transition-premium hover:scale-[1.02] active:scale-[0.98] shadow-[0_4px_20px_rgba(255,94,0,0.15)] hover:shadow-[0_4px_30px_rgba(255,94,0,0.3)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          className="relative w-full py-4 bg-cyber-orange border border-cyber-orange hover:bg-cyber-purple hover:border-cyber-purple text-text-primary font-semibold text-xs uppercase tracking-[0.08em] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-premium glow-hover"
         >
           {loading ? (
             <span className="flex items-center justify-center gap-2.5">
-              <span className="w-3.5 h-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+              <span className="w-3.5 h-3.5 border-2 border-text-muted border-t-text-primary rounded-full animate-spin" />
               Broadcasting TX...
             </span>
           ) : (
@@ -103,7 +103,7 @@ export default function PaymentPanel({
         <button
           onClick={onCancel}
           disabled={loading}
-          className="w-full text-center text-text-muted hover:text-text-primary text-[10px] py-1.5 transition-colors font-bold uppercase tracking-widest cursor-pointer disabled:opacity-40"
+          className="w-full border-transparent text-center text-text-muted hover:text-text-primary hover:border-cyber-purple text-[11px] py-1.5 font-semibold uppercase tracking-[0.08em] cursor-pointer disabled:opacity-40 transition-premium"
         >
           ← CANCEL PAYLOAD
         </button>

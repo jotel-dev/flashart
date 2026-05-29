@@ -20,10 +20,10 @@ export default function StyleSelector({
   return (
     <div className="w-full space-y-4">
       <div className="flex items-center justify-between">
-        <span className="font-space text-[10px] font-bold tracking-widest text-text-muted uppercase">
+        <span className="font-space text-[11px] font-semibold tracking-[0.08em] text-cyber-purple uppercase">
           Art Direction Engine
         </span>
-        <span className="text-[10px] bg-cyber-orange/10 text-cyber-orange border border-cyber-orange/20 px-2 py-0.5 rounded font-mono font-bold uppercase">
+        <span className="text-[11px] bg-[#2A1508] text-cyber-orange border border-[#F4722B40] px-2 py-0.5 rounded-md font-mono font-semibold uppercase">
           {selectedStyle.id}
         </span>
       </div>
@@ -36,10 +36,10 @@ export default function StyleSelector({
               key={style.id}
               type="button"
               onClick={() => onStyleChange(style)}
-              className={`relative px-4 py-3 rounded-2xl text-xs font-semibold tracking-wide text-left cursor-pointer transition-premium border ${
+              className={`relative px-4 py-3 text-xs font-medium tracking-wide text-left cursor-pointer border transition-premium ${
                 isActive
-                  ? 'bg-cyber-orange/[0.04] border-cyber-orange/30 text-text-primary shadow-[0_0_20px_rgba(255,94,0,0.05)]'
-                  : 'bg-transparent border-card-border text-text-muted hover:text-text-primary hover:bg-card-bg-hover hover:border-card-border-hover'
+                  ? 'bg-[#2A1508] border-[#F4722B40] text-text-primary glow-hover'
+                  : 'bg-transparent border-card-border text-text-muted hover:text-text-primary hover:bg-card-bg-hover hover:border-cyber-purple glow-hover'
               }`}
             >
               <div className="flex items-center justify-between w-full">

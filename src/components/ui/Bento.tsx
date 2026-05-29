@@ -33,34 +33,27 @@ export function BentoCard({
   colSpan = 'md:col-span-4',
 }: BentoCardProps) {
   const glowClasses = {
-    orange: 'neon-panel-orange',
-    purple: 'neon-panel-purple',
-    cyan: 'neon-panel-cyan',
+    orange: 'neon-panel-orange glow-hover',
+    purple: 'neon-panel-purple glow-hover',
+    cyan: 'neon-panel-cyan glow-hover-cyan',
     none: 'glass-panel',
   };
 
   return (
-    <div
-      className={`relative rounded-3xl overflow-hidden p-6 md:p-8 flex flex-col justify-between transition-premium ${glowClasses[glow]} ${colSpan} ${className}`}
-    >
-      {/* Decorative technical accent marks */}
-      <div className="absolute top-0 right-0 w-8 h-8 border-t border-r border-card-border rounded-tr-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-8 h-8 border-b border-l border-card-border rounded-bl-3xl pointer-events-none" />
-      
-      {/* Subtle tech corner notch */}
-      <div className="absolute top-3 left-3 w-1.5 h-1.5 border-t border-l border-card-border pointer-events-none" />
-
+<div
+    className={`relative overflow-hidden p-5 flex flex-col justify-between transition-premium ${glowClasses[glow]} ${colSpan} ${className}`}
+  >
       {/* Header section of card if title exists */}
       {(title || subtitle || headerRight) && (
         <div className="flex items-start justify-between w-full mb-6 relative z-10">
           <div className="space-y-1">
             {title && (
-              <h3 className="font-space text-xs font-bold tracking-wider uppercase text-text-muted">
+              <h3 className="font-space text-[11px] font-semibold tracking-[0.08em] uppercase text-cyber-purple">
                 {title}
               </h3>
             )}
             {subtitle && (
-              <p className="text-[10px] text-text-dim font-semibold tracking-wide uppercase">
+              <p className="text-[11px] text-text-muted font-medium tracking-[0.08em] uppercase">
                 {subtitle}
               </p>
             )}

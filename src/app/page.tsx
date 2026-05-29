@@ -1,5 +1,6 @@
- 'use client';
+'use client';
 
+import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { createWalletClient, custom, parseEther, createPublicClient, http } from 'viem';
 import { celo } from 'viem/chains';
@@ -12,7 +13,7 @@ import PromptInput from '../components/ui/PromptInput';
 import PreviewDeck from '../components/ui/PreviewDeck';
 import PaymentPanel from '../components/ui/PaymentPanel';
 import ResultPanel from '../components/ui/ResultPanel';
-import ThemeToggle from '../components/ui/ThemeToggle';
+import { useScrollProgress, useScrollAnimation, useParallax } from '../hooks/useScrollAnimation';
 
 const STYLES: StyleType[] = [
   { id: 'photorealistic', label: '📸 Photorealistic', suffix: 'photorealistic, 8k, ultra detailed' },
@@ -24,6 +25,11 @@ const STYLES: StyleType[] = [
 ];
 
 const PRICE_CELO = '0.01';
+const HERO_IMAGES = [
+  { src: '/preview-photo.png', alt: 'Generated landscape artwork preview' },
+  { src: '/hero-anime.png', alt: 'Generated character artwork preview' },
+  { src: '/preview-afro.png', alt: 'Generated portrait artwork preview' },
+];
 const FLASHART_CONTRACT = '0xBa3D984C36c5a34d37897f7d3CD4c6E5BB6CF568' as `0x${string}`;
 const FLASHART_ABI = [
   {
@@ -47,19 +53,17 @@ export default function Home() {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [isMiniPay, setIsMiniPay] = useState(false);
   const [txHash, setTxHash] = useState<string | null>(null);
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [agentTxHash, setAgentTxHash] = useState<string | null>(null);
 
-  useEffect(() => {
-    // Theme setup
-    const savedTheme = localStorage.getItem('theme') as 'dark' | 'light' | null;
-    const initialTheme = savedTheme || 'dark';
-    setTheme(initialTheme);
-    document.documentElement.className = initialTheme;
+  const scrollProgress = useScrollProgress();
+  const [heroRef, heroVisible] = useScrollAnimation();
+  const [bentoRef, bentoVisible] = useScrollAnimation();
+  const parallaxHero = useParallax(0.15);
 
-    // Wallet setup
-    const ethereum = (window as any).ethereum;
-    if (!ethereum) return;
+useEffect(() => {
+     // Wallet setup
+     const ethereum = (window as any).ethereum;
+     if (!ethereum) return;
 
     if (ethereum.isMiniPay) {
       setIsMiniPay(true);
@@ -76,13 +80,6 @@ export default function Home() {
       });
     }
   }, []);
-
-  const toggleTheme = () => {
-    const newTheme = theme === 'dark' ? 'light' : 'dark';
-    setTheme(newTheme);
-    localStorage.setItem('theme', newTheme);
-    document.documentElement.className = newTheme;
-  };
 
   const connectWallet = async () => {
     try {
@@ -103,7 +100,7 @@ export default function Home() {
     }
   };
 
-  const disconnectWallet = () => {
+const disconnectWallet = () => {
     setWalletAddress(null);
     setError(null);
   };
@@ -200,60 +197,99 @@ export default function Home() {
     setStep('input');
   };
 
-  return (
-    <main className="min-h-screen text-text-primary relative flex flex-col justify-between p-4 sm:p-6 md:p-8 overflow-hidden bg-background transition-colors duration-500">
+return (
+    <main className="min-h-screen text-text-primary relative flex flex-col justify-between overflow-hidden bg-background">
+      {/* Scroll Progress Bar */}
+      <div className="scroll-progress" style={{ transform: `scaleX(${scrollProgress / 100})` }} />
+
       {/* Premium ambient glows */}
       <NeonGlow />
 
-      <div className="relative z-10 w-full max-w-7xl mx-auto flex-1 flex flex-col justify-between gap-8 md:gap-10">
+      <div className="relative z-10 w-full flex-1 flex flex-col justify-between gap-8 md:gap-10">
         {/* Navigation Bar */}
-        <header className="flex items-center justify-between w-full">
+        <header className="fixed top-0 left-0 right-0 z-30 flex items-center justify-between w-full px-4 py-3 sm:px-6 md:px-8 backdrop-blur-[12px] bg-[rgba(10,10,10,0.85)] border-b border-[#1E1E24] glass-panel">
           <div className="flex items-center gap-2 sm:gap-3 select-none">
-            <div className="w-8 h-8 rounded-lg bg-card-bg border border-card-border flex items-center justify-center shadow-[0_0_15px_rgba(255,94,0,0.15)] relative overflow-hidden transition-premium hover:border-cyber-orange/40 hover:scale-105">
-              <svg className="w-4 h-4 text-text-primary" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M7.5 11.5c-2.5-3.5-1.5-7.5.5-10-1 4.5 1 7.5 3.5 9-2.5-1-4 1-4 1z" />
-                <path d="M12.5 18c-3 0-5-2-4.5-4 .5-1.5 2-2.5 3.5-2 1.5.5 2 2 1.5 3.5-.5 1-1 1.5-1.5 2.5.5-1 1.5-1.5 2.5-1 1 .5 1.5 2 .5 3-.5 1-2.5 1-4.5 1z" opacity="0.85" />
-                <circle cx="10" cy="15" r="0.6" fill="#ff5e00" />
-                <path d="M11 15.5l5.5-8.5.5-.8.5.8-5.5 8.5h-1z" fill="#ff5e00" />
-                <path d="M12.5 16l5.5-8.5.5-.8.5.8-5.5 8.5h-1z" fill="#ff5e00" />
-                <path d="M14 16.5l4.5-6.5.6-1 .4.2-.2 1.2-4.5 6.5h-.8z" fill="#ff5e00" />
+            <div
+              className="relative h-12 w-12 sm:h-14 sm:w-14 text-text-primary transition-premium hover:scale-[1.02]"
+              aria-label="FlashArt logo"
+            >
+              <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" className="h-full w-full">
+                <defs>
+                  <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#7C6AF5" />
+                    <stop offset="50%" stopColor="#06B6D4" />
+                    <stop offset="100%" stopColor="#F4722B" />
+                  </linearGradient>
+                  <linearGradient id="flashGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#F4722B" />
+                    <stop offset="100%" stopColor="#FFCF3D" />
+                  </linearGradient>
+                </defs>
+                <rect x="10" y="10" width="80" height="80" rx="16" stroke="url(#logoGradient)" strokeWidth="2.5" fill="none" />
+                <path d="M35 25 L55 25 L45 45 L60 45 L40 75 L45 55 L30 55 Z" stroke="url(#flashGradient)" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                <circle cx="70" cy="70" r="8" stroke="url(#logoGradient)" strokeWidth="2" fill="none" />
+                <circle cx="70" cy="70" r="3" fill="url(#logoGradient)" />
+                <path d="M25 75 L30 70 M25 70 L30 75" stroke="url(#logoGradient)" strokeWidth="2" strokeLinecap="round" />
+                <path d="M75 25 L80 20 M75 20 L80 25" stroke="url(#logoGradient)" strokeWidth="2" strokeLinecap="round" />
               </svg>
             </div>
-            <span className="font-space text-base sm:text-lg font-bold tracking-tight text-text-primary">
-              FLASH<span className="text-cyber-orange">ART</span>
-            </span>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3">
-            <ThemeToggle theme={theme} onToggle={toggleTheme} />
-            <ConnectWallet
-              walletAddress={walletAddress}
-              connectWallet={connectWallet}
-              disconnectWallet={disconnectWallet}
-            />
-          </div>
-        </header>
+<div className="flex items-center gap-2 sm:gap-3">
+              <ConnectWallet
+                walletAddress={walletAddress}
+                connectWallet={connectWallet}
+                disconnectWallet={disconnectWallet}
+              />
+            </div>
+          </header>
 
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-8 flex-1 flex flex-col justify-between gap-8 md:gap-10 pt-20">
         {/* Hero Headline Section */}
-        <section className="max-w-2xl mt-2 sm:mt-4 space-y-3 sm:space-y-4">
-          <div className="inline-flex items-center gap-2.5 bg-card-bg border border-card-border rounded-full px-4 py-1.5 text-[9px] text-text-muted font-bold uppercase tracking-wider shadow-sm">
-            <span className="relative flex h-1.5 w-1.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyber-orange opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-cyber-orange"></span>
-            </span>
-            {isMiniPay ? '🟢 MiniPay Connected' : 'Celo Network Integration'}
+        <section ref={heroRef} className={`grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_440px] gap-10 lg:gap-14 items-center pt-20 pb-16 scroll-reveal ${heroVisible ? 'visible' : ''}`}>
+          <div className="max-w-2xl space-y-4">
+            <div className="relative px-4 py-3 text-xs font-medium tracking-wide text-left bg-card-bg border border-card-border text-text-muted cursor-pointer glow-hover transition-premium">
+              <div className="flex items-center justify-between w-full">
+                <span className="font-sans font-medium">
+                  {isMiniPay ? 'MiniPay Connected' : 'Celo Network Integration'}
+                </span>
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#1DB97C] opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#1DB97C]"></span>
+                </span>
+              </div>
+            </div>
+            <h1 className="font-space text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight leading-[1.15] text-text-primary">
+              <span className="text-gradient-violet">Generate</span> <span className="text-gradient-orange">Stunning AI Art</span> <br />
+              <span className="text-gradient-violet">from Pure Text</span>
+            </h1>
+            <p className="text-text-muted text-[15px] leading-[1.7] max-w-lg font-medium">
+              Transform your concepts into digital outputs. Secured and paid instantly using CELO on the Celo network. No recurring monthly subscriptions. Pay only for what you build.
+            </p>
           </div>
-          <h1 className="font-space text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight leading-[1.15] text-text-primary">
-            Generate <span className="text-gradient-orange">Stunning AI Art</span> <br />
-            from Pure Text
-          </h1>
-          <p className="text-text-muted text-xs sm:text-sm leading-relaxed max-w-lg font-medium">
-            Transform your concepts into digital outputs. Secured and paid instantly using CELO on the Celo network. No recurring monthly subscriptions. Pay only for what you build.
-          </p>
+
+          <div className="relative hidden min-h-[420px] lg:block" style={{ transform: `translateY(${parallaxHero}px)` }}>
+            {HERO_IMAGES.map((image, index) => (
+              <div
+                key={image.src}
+                className="hero-art-card absolute rounded-none overflow-hidden transition-premium glow-hover"
+                style={{ animationDelay: `${index * 2.2}s` }}
+              >
+                <Image
+                  src={image.src}
+                  alt={image.alt}
+                  fill
+                  sizes="440px"
+                  className="object-cover"
+                  priority={index === 0}
+                />
+              </div>
+            ))}
+          </div>
         </section>
 
         {/* Bento Grid Application Workspace */}
-        <section className="w-full flex-1 flex items-center justify-center">
+        <section ref={bentoRef} className={`w-full flex-1 flex items-center justify-center scroll-reveal ${bentoVisible ? 'visible' : ''}`}>
           <BentoGrid className="items-stretch">
             {/* Dynamic Console Card */}
             <BentoCard
@@ -262,7 +298,7 @@ export default function Home() {
               subtitle={step === 'input' ? 'WORKSPACE V1.0' : step === 'pay' ? 'ON-CHAIN AUTH' : 'SCAN COMPLETED'}
               colSpan="md:col-span-8"
               headerRight={
-                <span className="text-[9px] bg-card-bg text-text-muted border border-card-border px-2 py-0.5 rounded font-mono font-bold">
+                <span className="text-[11px] bg-[#1E1A35] text-cyber-purple border border-[#7C6AF540] px-2 py-0.5 rounded-md font-mono font-semibold">
                   STEP {step === 'input' ? '01' : step === 'pay' ? '02' : '03'} / 03
                 </span>
               }
@@ -326,19 +362,19 @@ export default function Home() {
               colSpan="md:col-span-4"
               glow="orange"
             >
-              <div className="py-6 space-y-4 text-center md:text-left">
+          <div className="py-2 space-y-4 text-center md:text-left">
                 <div className="space-y-1">
-                  <div className="font-mono text-4xl font-black text-cyber-orange tracking-tight">
-                    {PRICE_CELO} <span className="text-sm text-text-secondary font-sans font-bold">CELO</span>
+                  <div className="font-mono text-4xl font-semibold text-cyber-orange tracking-tight">
+                    {PRICE_CELO} <span className="text-sm text-text-secondary font-sans font-semibold">CELO</span>
                   </div>
-                  <div className="text-[10px] text-text-dim tracking-wide font-semibold">
+                  <div className="text-[11px] text-text-muted tracking-[0.08em] font-medium">
                     ≈ $0.001 USD PER CALL (NO GAS MARKUP)
                   </div>
                 </div>
 
                 <div className="h-px bg-card-border w-full" />
 
-                <ul className="text-left space-y-2.5 text-xs text-text-muted font-semibold max-w-[220px] mx-auto md:mx-0">
+                <ul className="text-left space-y-2.5 text-xs text-text-muted font-medium max-w-[220px] mx-auto md:mx-0">
                   <li className="flex items-center gap-2">
                     <span className="text-cyber-orange">✓</span> Parallel GPU generation
                   </li>
@@ -361,10 +397,10 @@ export default function Home() {
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 py-3">
                 <div className="space-y-1">
-                  <div className="text-[10px] font-bold text-text-muted uppercase tracking-wide">
+                  <div className="text-[11px] font-semibold text-cyber-purple uppercase tracking-[0.08em]">
                     Ledger Address
                   </div>
-                  <div className="font-mono text-xs text-text-secondary font-bold select-all bg-card-bg border border-card-border rounded-xl p-3 flex items-center justify-between">
+                  <div className="font-mono text-xs text-text-secondary font-semibold select-all bg-card-bg-hover border border-card-border rounded-xl p-3 flex items-center justify-between transition-premium hover:border-cyber-purple">
                     <span className="truncate max-w-[85%]">{FLASHART_CONTRACT}</span>
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3.5 h-3.5 text-text-dim hover:text-text-primary transition-colors cursor-pointer">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H5.25m11.9-3.664A2.251 2.251 0 0 0 15 2.25h-3a1.125 1.125 0 0 0-1.125 1.125v1.25m9 0.664a2.25 2.25 0 0 1-2.25 2.25h-1.5m2.25-2.25V6.75A2.25 2.25 0 0 1 18 9v.75m-6.75-6h2.25m-9 13.5h.008v.008H3.75v-.008Zm0-3h.008v.008H3.75v-.008Zm0-3h.008v.008H3.75v-.008Z" />
@@ -373,12 +409,12 @@ export default function Home() {
                 </div>
 
                 <div className="space-y-1">
-                  <div className="text-[10px] font-bold text-text-muted uppercase tracking-wide">
+                  <div className="text-[11px] font-semibold text-cyber-purple uppercase tracking-[0.08em]">
                     Smart Contract Interface
                   </div>
-                  <div className="font-mono text-xs text-text-secondary font-bold bg-card-bg border border-card-border rounded-xl p-3 flex items-center justify-between">
+                  <div className="font-mono text-xs text-text-secondary font-semibold bg-card-bg-hover border border-card-border rounded-xl p-3 flex items-center justify-between transition-premium hover:border-cyber-purple">
                     <span>payForImage(string prompt)</span>
-                    <span className="text-[9px] bg-cyber-cyan/15 text-cyber-cyan border border-cyber-cyan/20 px-1.5 py-0.5 rounded font-mono font-bold uppercase">
+                    <span className="text-[10px] bg-[#1E1A35] text-cyber-purple border border-[#7C6AF540] px-1.5 py-0.5 rounded-md font-mono font-semibold uppercase">
                       payable
                     </span>
                   </div>
@@ -387,7 +423,7 @@ export default function Home() {
 
               <div className="h-px bg-card-border my-2 w-full" />
 
-              <div className="flex flex-wrap gap-x-6 gap-y-2 items-center opacity-35 select-none text-[9px] font-bold tracking-[0.2em] uppercase text-text-secondary">
+              <div className="flex flex-wrap gap-x-6 gap-y-2 items-center opacity-70 select-none text-[11px] font-semibold tracking-[0.08em] uppercase text-text-muted">
                 <span>Celo Ecosystem</span>
                 <span>•</span>
                 <span>MiniPay Verified</span>
@@ -401,7 +437,7 @@ export default function Home() {
         </section>
 
         {/* Footer */}
-        <footer className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-card-border pt-6 text-[10px] text-text-muted font-bold tracking-wider uppercase">
+        <footer className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-card-border pt-6 pb-8 text-[11px] text-text-muted font-semibold tracking-[0.08em] uppercase animate-fade-in-up" style={{ animationDelay: '0.6s' }}>
           <div>
             Built on Celo Network · Proof of Ship 2025
           </div>
@@ -409,6 +445,7 @@ export default function Home() {
             FlashArt © 2026
           </div>
         </footer>
+        </div>
       </div>
     </main>
   );
