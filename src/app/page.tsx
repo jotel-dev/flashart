@@ -24,7 +24,7 @@ const STYLES: StyleType[] = [
   { id: 'afrofuturism', label: '🌍 Afrofuturism', suffix: 'afrofuturism art, rich african culture, futuristic technology, vibrant colors, cosmic background, powerful black figures, detailed illustration' },
 ];
 
-const PRICE_CELO = '0.01';
+const PRICE_CELO = '0.001';
 const HERO_IMAGES = [
   { src: '/preview-photo.png', alt: 'Generated landscape artwork preview' },
   { src: '/hero-anime.png', alt: 'Generated character artwork preview' },
@@ -233,6 +233,9 @@ return (
                 <path d="M75 25 L80 20 M75 20 L80 25" stroke="url(#logoGradient)" strokeWidth="2" strokeLinecap="round" />
               </svg>
             </div>
+            <h1 className="font-space text-xl sm:text-2xl font-semibold tracking-tight">
+              <span className="text-gradient-violet">Flash</span><span className="text-gradient-orange">Art</span>
+            </h1>
           </div>
 
 <div className="flex items-center gap-2 sm:gap-3">

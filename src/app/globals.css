@@ -59,7 +59,7 @@ html {
 }
 
 body {
-  background: linear-gradient(135deg, #0A0A0A 0%, #121214 50%, #0A0A0A 100%);
+  background: #0A0A0A;
   color: var(--foreground);
   font-family: var(--font-sans);
   font-size: 15px;
